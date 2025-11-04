@@ -1,0 +1,149 @@
+# PulumiCost MCP Server Configuration Example
+# Copy this file to config.yaml and customize for your environment
+
+server:
+  # Server listen address and port
+  port: 8080
+  host: "0.0.0.0"
+
+  # Logging configuration
+  log_level: "info"  # debug, info, warn, error
+  log_format: "json"  # json or text
+
+  # Timeout settings
+  read_timeout: "30s"
+  write_timeout: "30s"
+  shutdown_timeout: "10s"
+
+pulumicost:
+  # Path to pulumicost-core binary
+  core_path: "/usr/local/bin/pulumicost"
+
+  # Plugin directory (where cost source plugins are installed)
+  plugin_dir: "~/.pulumicost/plugins"
+
+  # PulumiCost spec version to use
+  spec_version: "0.1.0"
+
+plugins:
+  # Plugin timeout
+  timeout: "30s"
+
+  # Maximum concurrent plugin calls
+  max_concurrent: 10
+
+  # Health check interval
+  health_check_interval: "60s"
+
+  # Retry configuration
+  retry_attempts: 3
+  retry_delay: "5s"
+
+mcp:
+  # Enable streaming responses
+  enable_streaming: true
+
+  # Maximum message size (in bytes)
+  max_message_size: 10485760  # 10MB
+
+  # Connection timeout
+  connection_timeout: "30s"
+
+cache:
+  # Enable caching
+  enabled: true
+
+  # Cache TTL settings
+  ttl:
+    plugin_metadata: "5m"
+    cost_data: "30s"
+    pulumi_state: "1m"
+
+observability:
+  # Metrics configuration (Prometheus)
+  metrics:
+    enabled: true
+    port: 9090
+    path: "/metrics"
+
+  # Distributed tracing configuration
+  tracing:
+    enabled: false
+    endpoint: "http://jaeger:14268/api/traces"
+    sample_rate: 0.1
+
+  # Logging configuration
+  logging:
+    format: "json"  # json or text
+    level: "info"   # debug, info, warn, error
+    output: "stdout"  # stdout or file path
+
+security:
+  # TLS configuration
+  tls:
+    enabled: false
+    cert_file: "/etc/pulumicost-mcp/tls/cert.pem"
+    key_file: "/etc/pulumicost-mcp/tls/key.pem"
+
+  # Authentication configuration
+  auth:
+    enabled: false
+    method: "token"  # token, oauth, mtls
+    token_header: "X-API-Token"
+
+pulumi:
+  # Pulumi access token (or set PULUMI_ACCESS_TOKEN env var)
+  # access_token: "pul-xxxxx"
+
+  # Pulumi backend URL
+  backend_url: "https://api.pulumi.com"
+
+  # Default stack (optional)
+  # default_stack: "organization/project/stack"
+
+# Feature flags
+features:
+  # Enable experimental features
+  experimental: false
+
+  # Enable cost forecasting
+  forecasting: true
+
+  # Enable anomaly detection
+  anomaly_detection: true
+
+  # Enable optimization recommendations
+  recommendations: true
+
+# Rate limiting
+rate_limiting:
+  enabled: false
+  requests_per_minute: 60
+  burst: 10
+
+# CORS settings (for web clients)
+cors:
+  enabled: false
+  allowed_origins:
+    - "http://localhost:3000"
+  allowed_methods:
+    - "GET"
+    - "POST"
+    - "OPTIONS"
+  allowed_headers:
+    - "Content-Type"
+    - "Authorization"
+  exposed_headers:
+    - "X-Request-ID"
+  max_age: "3600"
+
+# Development settings
+development:
+  # Enable debug mode
+  debug: false
+
+  # Enable profiling endpoints
+  profiling: false
+
+  # Hot reload (requires additional tooling)
+  hot_reload: false
