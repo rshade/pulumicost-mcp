@@ -1,46 +1,59 @@
-# Claude Code - PulumiCost MCP Server Development Context
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
 PulumiCost MCP Server is a Model Context Protocol implementation that exposes cloud cost analysis capabilities to AI assistants. Built with Goa and Goa-AI, it provides type-safe, design-first development with guaranteed schema consistency.
 
+**Current Status**: Initial project setup complete. Core design files exist but services are not yet implemented. All implementation tasks are tracked in GitHub issues (see Issues section below).
+
 ## Quick Reference
 
-### Project Commands
+### Essential Commands
 
 ```bash
-# Generate Goa code from design
+# Setup new development environment (first time)
+make setup
+
+# Generate Goa code from design (required after design changes)
 make generate
 
 # Build server
 make build
 
-# Run tests
+# Run all tests
 make test
+
+# Run single test
+go test -v -run TestName ./internal/service
+
+# Run tests with coverage
+make test-coverage
 
 # Run linters
 make lint
 
+# Run complete validation (lint + test)
+make validate
+
 # Run server locally
 make run
 
-# Clean generated files
+# Clean generated files and build artifacts
 make clean
-
-# Complete validation
-make validate
 ```
 
 ### Key Directories
 
-- `design/` - Goa DSL definitions (source of truth)
-- `cmd/pulumicost-mcp/` - Server entry point
-- `internal/service/` - Business logic implementation
-- `internal/adapter/` - External system adapters
-- `gen/` - Generated code (never edit directly!)
-- `docs/` - Documentation
-- `role-prompts/` - AI assistant role contexts
-- `examples/` - Usage examples
+- `design/` - Goa DSL definitions (source of truth for all APIs)
+- `cmd/pulumicost-mcp/` - Server entry point (not yet implemented)
+- `internal/service/` - Business logic implementation (not yet implemented)
+- `internal/adapter/` - External system adapters (not yet implemented)
+- `gen/` - Generated code (never edit directly! Regenerated from design/)
+- `examples/pulumi-stacks/` - Example Pulumi projects for testing
+- `examples/queries/` - Example MCP queries
+- `role-prompts/` - AI assistant role-specific contexts
 
 ## Architecture Principles
 
@@ -628,6 +641,28 @@ go test -memprofile=mem.prof -bench=.
 go tool pprof cpu.prof
 ```
 
+## GitHub Issues and Milestones
+
+All implementation work is tracked in GitHub issues organized into 5 phases:
+
+### Phase 1: Foundation (Milestone: 2025-Q4 - Phase 1: Foundation)
+- Issues #1-6: CI/CD, linting, testing framework, Makefile, Goa design, code generation
+
+### Phase 2: Core Implementation (Milestone: 2025-Q4 - Phase 2: Core Implementation)
+- Issues #7-12: Cost/Plugin/Analysis services, PulumiCost/Plugin/Spec adapters
+
+### Phase 3: MCP Integration (Milestone: 2025-Q4 - Phase 3: MCP Integration)
+- Issues #13-14: MCP server, Claude Desktop integration
+
+### Phase 4: Testing & Documentation (Milestone: 2025-Q4 - Phase 4: Testing & Documentation)
+- Issues #15-16: E2E tests, comprehensive documentation
+
+### Phase 5: Polish & Beta Release (Milestone: 2025-Q4 - Phase 5: Polish & Beta Release)
+- Issues #17-19: Performance optimization, observability, release preparation
+
+**Priority Labels**: P0 (critical), P1 (high), P2 (medium)
+**Type Labels**: infrastructure, service, adapter, testing, documentation, design
+
 ## Resources
 
 ### Documentation
@@ -635,12 +670,13 @@ go tool pprof cpu.prof
 - [Goa-AI Guide](https://goa.design/goa-ai)
 - [MCP Specification](https://modelcontextprotocol.io)
 - [Implementation Plan](IMPLEMENTATION_PLAN.md)
+- [Contributing Guide](CONTRIBUTING.md)
 
 ### Related Projects
-- [pulumicost-core](../pulumicost-core/README.md)
-- [pulumicost-spec](../pulumicost-spec/README.md)
+- [pulumicost-core](../pulumicost-core/README.md) - Cost analysis orchestration
+- [pulumicost-spec](../pulumicost-spec/README.md) - gRPC plugin specification
 
-### Role Prompts
+### Role Prompts (AI Assistant Context)
 - [Senior Architect](role-prompts/senior-architect.md)
 - [Product Manager](role-prompts/product-manager.md)
 - [DevOps Engineer](role-prompts/devops-engineer.md)
@@ -735,9 +771,28 @@ Examples:
 
 4. Test with minimal example
 
+## Testing with Example Stacks
+
+Example Pulumi projects are available in `examples/pulumi-stacks/`:
+
+- `simple-aws/` - Basic AWS stack (EC2, RDS, S3) for testing cost analysis
+- Each example includes a `queries.md` with 25+ sample cost analysis queries
+- Use these to test MCP tools once implemented
+
+**To use**:
+```bash
+cd examples/pulumi-stacks/simple-aws
+pulumi preview --json > preview.json
+# Use preview.json to test get_projected_cost tool
+```
+
 ---
 
-**Always remember**: Design first, then implement. Generated code is sacred - never modify it directly!
+**Critical Rules**:
+1. **Design First**: All API changes start in `design/*.go`, then `make generate`
+2. **Never Edit Generated Code**: Files in `gen/` are regenerated and will be overwritten
+3. **Always Run Tests**: Aim for >80% coverage, run `make validate` before commits
+4. **Context Propagation**: Always pass `context.Context` through the call stack
 
 **Last Updated**: 2025-01-04
-**Project Status**: Initial Setup Complete, Implementation Ready
+**Project Status**: Initial Setup Complete - Ready for Phase 1 Implementation

@@ -1,0 +1,17 @@
+name: pulumicost-example-simple-aws
+description: Simple AWS stack for testing PulumiCost MCP Server
+runtime: nodejs
+
+config:
+  aws:region:
+    description: AWS region to deploy to
+    default: us-east-1
+  instanceType:
+    description: EC2 instance type
+    default: t3.micro
+  dbInstanceClass:
+    description: RDS instance class
+    default: db.t3.small
+  dbPassword:
+    description: Database password
+    secret: true
