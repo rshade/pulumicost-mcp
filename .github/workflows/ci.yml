@@ -1,0 +1,150 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+env:
+  GO_VERSION: "1.24"
+  GOLANGCI_LINT_VERSION: "v2.6.0"
+
+jobs:
+  # Verify that code generation is up to date
+  generate-check:
+    name: Verify Code Generation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install Goa
+        run: go install goa.design/goa/v3/cmd/goa@latest
+
+      - name: Generate code
+        run: make generate
+
+      - name: Check for changes
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "Error: Generated code is out of sync with design"
+            echo "Please run 'make generate' and commit the changes"
+            git status --porcelain
+            git diff
+            exit 1
+          fi
+
+  # Run tests with coverage
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install Goa
+        run: go install goa.design/goa/v3/cmd/goa@latest
+
+      - name: Generate code
+        run: make generate
+
+      - name: Run tests
+        run: make test-coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          file: ./coverage.out
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  # Run linters
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install Goa
+        run: go install goa.design/goa/v3/cmd/goa@latest
+
+      - name: Generate code
+        run: make generate
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
+          args: --timeout=5m
+
+  # Build the binary
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64, arm64]
+        exclude:
+          - goos: windows
+            goarch: arm64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install Goa
+        run: go install goa.design/goa/v3/cmd/goa@latest
+
+      - name: Generate code
+        run: make generate
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          mkdir -p bin
+          if [ "$GOOS" = "windows" ]; then
+            go build -o bin/pulumicost-mcp-${{ matrix.goos }}-${{ matrix.goarch }}.exe cmd/pulumicost-mcp/main.go
+          else
+            go build -o bin/pulumicost-mcp-${{ matrix.goos }}-${{ matrix.goarch }} cmd/pulumicost-mcp/main.go
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pulumicost-mcp-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: bin/*
+          retention-days: 7

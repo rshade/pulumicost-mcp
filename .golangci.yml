@@ -1,0 +1,233 @@
+# golangci-lint configuration for pulumicost-mcp
+# https://golangci-lint.run/usage/configuration/
+
+run:
+  timeout: 5m
+  tests: true
+  skip-dirs:
+    - gen
+    - vendor
+    - testdata
+  skip-files:
+    - ".*\\.pb\\.go$"
+    - ".*_gen\\.go$"
+
+output:
+  formats:
+    - format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+  sort-results: true
+
+linters:
+  enable:
+    # Default linters
+    - errcheck      # Check for unchecked errors
+    - gosimple      # Simplify code
+    - govet         # Reports suspicious constructs
+    - ineffassign   # Detect ineffectual assignments
+    - staticcheck   # Go static analysis
+    - unused        # Check for unused code
+
+    # Additional quality linters
+    - gofmt         # Check formatting
+    - gofumpt       # Stricter gofmt
+    - goimports     # Check import formatting
+    - misspell      # Check for misspelled words
+    - revive        # Fast, configurable, extensible, flexible, and beautiful linter
+    - unconvert     # Remove unnecessary type conversions
+    - unparam       # Check for unused function parameters
+    - gocritic      # Most opinionated linter
+    - gocyclo       # Compute cyclomatic complexity
+    - gocognit      # Compute cognitive complexity
+    - godot         # Check comment periods
+    - bodyclose     # Check HTTP response body is closed
+    - noctx         # Find http requests without context.Context
+    - rowserrcheck  # Check sql.Rows.Err is checked
+    - sqlclosecheck # Check sql.Rows/sql.Stmt are closed
+    - exportloopref # Check for pointers to loop variables
+    - goprintffuncname # Check printf-like function names
+    - predeclared   # Check for shadowing of predeclared identifiers
+    - whitespace    # Check for unnecessary whitespace
+    - wsl           # Whitespace linter
+    - dupl          # Check for duplicate code
+    - gosec         # Security-focused linter
+    - stylecheck    # Replacement for golint
+    - errorlint     # Find misuse of error wrapping
+
+  disable:
+    - typecheck     # Disabled because sometimes conflicts with generated code
+    - exhaustive    # Can be noisy with enums
+    - exhaustruct   # Too strict for our use case
+    - funlen        # We prefer cognitive complexity
+    - cyclop        # Duplicate of gocyclo
+    - nestif        # Can be noisy
+    - testpackage   # We allow same-package tests
+    - paralleltest  # Not always applicable
+    - tparallel     # Not always applicable
+    - forcetypeassert # Too strict
+    - gomnd         # Magic number detection - too noisy
+    - nlreturn      # Too opinionated about returns
+    - wrapcheck     # Too strict for internal code
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+    exclude-functions:
+      - fmt.Print
+      - fmt.Println
+      - fmt.Printf
+
+  govet:
+    enable-all: true
+    disable:
+      - fieldalignment  # Too strict, minor optimization
+      - shadow          # Can be useful but noisy
+
+  gofmt:
+    simplify: true
+
+  gofumpt:
+    extra-rules: true
+
+  goimports:
+    local-prefixes: github.com/rshade/pulumicost-mcp
+
+  misspell:
+    locale: US
+    ignore-words:
+      - pulumi
+      - goa
+      - mcp
+
+  revive:
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: superfluous-else
+      - name: unreachable-code
+      - name: unused-parameter
+      - name: unused-receiver
+
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+      - experimental
+      - opinionated
+    disabled-checks:
+      - unnamedResult    # Named results not always needed
+      - hugeParam        # Sometimes necessary
+      - rangeValCopy     # Sometimes acceptable
+      - whyNoLint        # Not always necessary
+
+  gocyclo:
+    min-complexity: 15
+
+  gocognit:
+    min-complexity: 20
+
+  dupl:
+    threshold: 100
+
+  gosec:
+    excludes:
+      - G104  # Duplicate of errcheck
+      - G204  # Subprocess with variable - needed for plugin execution
+    config:
+      G301: "0750"  # Acceptable file permissions
+      G302: "0640"  # Acceptable file permissions
+      G306: "0640"  # Acceptable file permissions
+
+  stylecheck:
+    checks:
+      - all
+      - -ST1000  # Package comments not always required
+      - -ST1003  # ALL_CAPS is ok for constants
+
+  errorlint:
+    errorf: true
+    asserts: true
+    comparison: true
+
+  whitespace:
+    multi-if: false
+    multi-func: false
+
+  wsl:
+    strict-append: false
+    allow-assign-and-call: true
+    allow-assign-and-anything: true
+    allow-cuddle-declarations: true
+    allow-trailing-comment: true
+    force-case-trailing-whitespace: 0
+
+issues:
+  exclude-rules:
+    # Exclude some linters from running on tests files
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - gocognit
+        - dupl
+        - gosec
+        - wsl
+        - gocritic
+
+    # Exclude linters for generated code
+    - path: gen/
+      linters:
+        - all
+
+    # Exclude specific issues
+    - text: "should have a package comment"
+      linters:
+        - revive
+
+    - text: "G204: Subprocess"
+      linters:
+        - gosec
+
+    # Allow dot imports for Goa design DSL
+    - path: design/
+      text: "dot imports"
+      linters:
+        - revive
+        - stylecheck
+
+    # Allow longer lines in design files
+    - path: design/
+      linters:
+        - lll
+
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  new: false
+
+severity:
+  default-severity: error
+  rules:
+    - linters:
+        - dupl
+      severity: warning
+    - linters:
+        - misspell
+      severity: warning

@@ -1,0 +1,79 @@
+version: 2
+
+updates:
+  # Go module dependencies
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "go"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    assignees:
+      - "rshade"
+    reviewers:
+      - "rshade"
+    # Group non-security updates to reduce PR noise
+    groups:
+      goa-updates:
+        patterns:
+          - "goa.design/*"
+      pulumi-updates:
+        patterns:
+          - "github.com/pulumi/*"
+      aws-sdk-updates:
+        patterns:
+          - "github.com/aws/*"
+      azure-sdk-updates:
+        patterns:
+          - "github.com/Azure/*"
+      test-dependencies:
+        patterns:
+          - "github.com/stretchr/testify"
+          - "gotest.tools/*"
+      development-dependencies:
+        dependency-type: "development"
+
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    assignees:
+      - "rshade"
+    reviewers:
+      - "rshade"
+
+  # Docker dependencies (if Dockerfile exists)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    assignees:
+      - "rshade"
+    reviewers:
+      - "rshade"
