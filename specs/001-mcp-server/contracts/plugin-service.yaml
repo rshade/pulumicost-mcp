@@ -1,0 +1,203 @@
+openapi: 3.0.3
+info:
+  title: Plugin Management Service
+  description: Service for discovering, validating, and managing cost source plugins
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/jsonrpc
+
+paths:
+  /plugin.list:
+    post:
+      summary: List available cost plugins
+      operationId: listPlugins
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                include_health:
+                  type: boolean
+                  default: true
+      responses:
+        '200':
+          description: List of plugins
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  plugins:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Plugin'
+      x-mcp-tool:
+        name: list_cost_plugins
+        description: Discover available cost source plugins
+
+  /plugin.get_info:
+    post:
+      summary: Get detailed plugin information
+      operationId: getPluginInfo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - plugin_name
+              properties:
+                plugin_name:
+                  type: string
+      responses:
+        '200':
+          description: Plugin details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PluginDetails'
+        '404':
+          description: Plugin not found
+      x-mcp-tool:
+        name: get_plugin_info
+        description: Get capabilities and configuration for a plugin
+
+  /plugin.validate:
+    post:
+      summary: Validate plugin against pulumicost-spec
+      operationId: validatePlugin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - plugin_path
+              properties:
+                plugin_path:
+                  type: string
+                conformance_level:
+                  type: string
+                  enum: [BASIC, STANDARD, FULL]
+                  default: STANDARD
+      responses:
+        '200':
+          description: Validation results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationReport'
+      x-mcp-tool:
+        name: validate_plugin_spec
+        description: Run conformance tests on a plugin
+
+  /plugin.health_check:
+    post:
+      summary: Check plugin health
+      operationId: healthCheck
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - plugin_name
+              properties:
+                plugin_name:
+                  type: string
+      responses:
+        '200':
+          description: Health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+      x-mcp-tool:
+        name: check_plugin_health
+        description: Verify plugin connectivity and response time
+
+components:
+  schemas:
+    Plugin:
+      type: object
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        description:
+          type: string
+        capabilities:
+          $ref: '#/components/schemas/PluginCapabilities'
+        health_status:
+          $ref: '#/components/schemas/HealthStatus'
+
+    PluginDetails:
+      allOf:
+        - $ref: '#/components/schemas/Plugin'
+        - type: object
+          properties:
+            grpc_address:
+              type: string
+            configuration:
+              type: object
+
+    PluginCapabilities:
+      type: object
+      properties:
+        supports_projected:
+          type: boolean
+        supports_actual:
+          type: boolean
+        supports_providers:
+          type: array
+          items:
+            type: string
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [HEALTHY, UNHEALTHY, UNKNOWN]
+        last_check:
+          type: string
+          format: date-time
+        latency_ms:
+          type: integer
+        error_message:
+          type: string
+
+    ValidationReport:
+      type: object
+      properties:
+        plugin_name:
+          type: string
+        conformance_level:
+          type: string
+        passed:
+          type: boolean
+        test_results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TestResult'
+        timestamp:
+          type: string
+          format: date-time
+
+    TestResult:
+      type: object
+      properties:
+        name:
+          type: string
+        passed:
+          type: boolean
+        error_message:
+          type: string
+        duration_ms:
+          type: integer
