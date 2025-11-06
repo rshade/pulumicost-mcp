@@ -452,6 +452,7 @@ Potential ML integration points (not in MVP):
 - NLP-based recommendation explanations using LLMs
 - Transfer learning from similar infrastructure patterns
 
+
 ## Type Mapping to Goa DSL
 
 All entities will be defined in `design/types.go` using Goa DSL:

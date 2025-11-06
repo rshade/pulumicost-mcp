@@ -128,7 +128,7 @@ gen/ directory contains all expected packages
 **Independent Test**: Deploy Pulumi stack, export preview JSON, ask Claude "What
 are projected costs?", receive accurate breakdown. This phase delivers the MVP.
 
-**Tasks**: 24
+**Tasks**: 25
 
 ### Test-First: Unit Tests
 
@@ -306,7 +306,7 @@ suggestions with estimated savings. Track budget, receive burn rate and alerts.
 
 **Goal**: Production readiness - observability, performance, documentation
 
-**Tasks**: 8
+**Tasks**: 10
 
 - [ ] T088 [P] Add structured logging throughout services (JSON format, log
   levels per FR-018)
