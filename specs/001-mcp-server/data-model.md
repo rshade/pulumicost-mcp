@@ -362,6 +362,96 @@ ResourceCost
   └── references other ResourceCost via dependencies
 ```
 
+## AI Methodology
+
+### Algorithmic Approach
+
+The "AI-powered" features in PulumiCost MCP Server use statistical analysis,
+pattern recognition, and time-series forecasting techniques. These are
+algorithmic approaches rather than machine learning models, optimized for:
+
+- **Deterministic results**: Same input always produces same output
+- **Explainability**: Clear reasoning for recommendations
+- **Low latency**: Sub-second analysis without model inference
+- **No training data required**: Works immediately on new stacks
+
+### Recommendation Engine
+
+**Approach**: Rule-based pattern analysis with heuristics
+
+**Methodology**:
+
+1. **Rightsizing**: Compare resource utilization metrics (if available from
+   cloud provider APIs) against provisioned capacity. Flag resources with <50%
+   utilization consistently for 30+ days.
+2. **Reserved Instances**: Identify long-running resources (>90 days uptime)
+   with stable usage patterns. Calculate savings from reserved capacity.
+3. **Spot Instances**: Detect stateless, fault-tolerant workloads (containers,
+   batch jobs) suitable for spot/preemptible instances.
+4. **Storage Optimization**: Find infrequently accessed storage (last access
+   >90 days) for lifecycle policies or archival tiers.
+
+**Confidence Levels**:
+
+- HIGH: Strong signal (e.g., 95%+ utilization match, 180+ day stable pattern)
+- MEDIUM: Moderate signal (70-95% match, 90-180 day pattern)
+- LOW: Weak signal (<70% match, <90 day pattern)
+
+### Anomaly Detection
+
+**Approach**: Statistical baseline comparison with standard deviation thresholds
+
+**Methodology**:
+
+1. **Baseline Calculation**: Compute 30-day rolling average and standard
+   deviation for each resource's daily cost
+2. **Deviation Detection**: Flag costs exceeding baseline ± (N × stddev) where
+   N is sensitivity (LOW=3, MEDIUM=2, HIGH=1)
+3. **Severity Assignment**:
+   - CRITICAL: >3σ deviation, cost increase >100%
+   - HIGH: 2-3σ deviation, cost increase 50-100%
+   - MEDIUM: 1-2σ deviation, cost increase 25-50%
+   - LOW: <1σ deviation, cost increase <25%
+
+4. **Root Cause Inference**: Pattern matching against known causes (scaling
+   events, new resources, region changes, pricing updates)
+
+### Cost Forecasting
+
+**Approach**: Time-series analysis with linear regression and confidence
+intervals
+
+**Methodology**:
+
+1. **Trend Analysis**: Fit linear regression to 90-day historical cost data
+2. **Seasonality Detection**: Identify weekly/monthly patterns using moving
+   averages
+3. **Confidence Intervals**: Calculate prediction intervals using regression
+   standard error
+4. **Extrapolation**: Project costs forward with uncertainty bounds widening
+   over time
+
+**Confidence Levels**:
+
+- 0.95 (default): 95% confidence interval (2σ)
+- 0.90: 90% confidence interval (1.65σ)
+- 0.99: 99% confidence interval (2.58σ)
+
+**Limitations**:
+
+- Assumes past patterns continue (no major architecture changes)
+- Accuracy decreases for forecasts >90 days
+- Requires minimum 30 days historical data
+
+### Future Enhancements
+
+Potential ML integration points (not in MVP):
+
+- Neural network forecasting for complex seasonal patterns
+- Anomaly detection with autoencoders for multivariate analysis
+- NLP-based recommendation explanations using LLMs
+- Transfer learning from similar infrastructure patterns
+
 ## Type Mapping to Goa DSL
 
 All entities will be defined in `design/types.go` using Goa DSL:

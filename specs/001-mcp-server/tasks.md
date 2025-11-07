@@ -7,17 +7,17 @@
 
 ## Task Summary
 
-**Total Tasks**: 88
+**Total Tasks**: 91
 **By Phase**:
 
 - Phase 1 (Setup): 10 tasks
 - Phase 2 (Foundation): 12 tasks
-- Phase 3 (US1 - Cost Analysis): 24 tasks
+- Phase 3 (US1 - Cost Analysis): 25 tasks
 - Phase 4 (US2 - Plugin Management): 18 tasks
 - Phase 5 (US3 - Optimization & Analytics): 16 tasks
-- Phase 6 (Polish): 8 tasks
+- Phase 6 (Polish): 10 tasks
 
-**Parallel Opportunities**: 42 parallelizable tasks marked with [P]
+**Parallel Opportunities**: 44 parallelizable tasks marked with [P]
 
 ## Implementation Strategy
 
@@ -63,7 +63,8 @@ Foundation phase completes. They are designed to be independently testable.
 - [ ] T003 [P] Create .golangci.yml configuration from CLAUDE.md specification
   (40+ linters, skip gen/, allow dot imports in design/)
 - [ ] T004 [P] Create config.yaml.example with server, pulumicost, and MCP
-  configuration sections
+  configuration sections (include batch_size setting for large stack processing
+  - default 100 resources per batch for 1000+ resource stacks)
 - [ ] T005 [P] Setup .github/workflows/ci.yml (generate-check, test, lint,
   build jobs)
 - [ ] T006 [P] Create .gitignore for Go (gen/, build/, *.test, coverage.out)
@@ -171,14 +172,14 @@ are projected costs?", receive accurate breakdown. This phase delivers the MVP.
 - [ ] T043 [P] [US1] Implement QueryByTags method with tag grouping and
   aggregation
 - [ ] T044 [P] [US1] Run TestQueryByTags - verify GREEN
-- [ ] T045 [US1] Implement AnalyzeStack method with SSE streaming support for
-  large stacks
+- [ ] T045a [US1] Setup SSE streaming infrastructure and progress update types
+- [ ] T045b [US1] Implement AnalyzeStack method with streaming for large stacks
 - [ ] T046 [US1] Run TestAnalyzeStack - verify GREEN
 
 ### Server Integration
 
 - [ ] T047 [US1] Create cmd/pulumicost-mcp/main.go with MCP server
-  initialization, wire up Cost Service with adapters
+  initialization, wire up Cost Query Service with adapters
 - [ ] T048 [US1] Add graceful shutdown handling (SIGTERM/SIGINT) per FR-020
 - [ ] T049 [US1] Run server locally, test with curl against JSON-RPC endpoints
 - [ ] T050 [US1] Create examples/queries/cost-analysis-queries.md with 10+
@@ -289,8 +290,10 @@ or "Show me anomalies for last 30 days", receive actionable insights.
 - [ ] T085 [US3] Wire up Analysis Service in cmd/pulumicost-mcp/main.go
 - [ ] T086 [US3] Create examples/queries/optimization-queries.md with 10+
   example analytics questions
-- [ ] T087 [US3] Add edge case handling: unsupported resource types, missing
-  data, currency normalization
+- [ ] T087 [US3] Add comprehensive edge case handling: (1) currency
+  normalization with USD conversion for multi-currency stacks, (2) graceful
+  degradation for unsupported resource types with clear error messages, (3)
+  missing cost data handling with partial results
 
 **Phase 5 Validation**: Query stack for recommendations, receive actionable
 suggestions with estimated savings. Track budget, receive burn rate and alerts.
@@ -318,6 +321,9 @@ suggestions with estimated savings. Track budget, receive burn rate and alerts.
   setup, troubleshooting
 - [ ] T094 [P] Create examples/pulumi-stacks/simple-aws/ example project with
   queries.md
+- [ ] T096 [P] Validate cost accuracy within 5% of actual billing data
+  (SC-006)
+- [ ] T097 [P] Test horizontal scaling to 500 concurrent users (SC-010)
 - [ ] T095 Verify end-to-end: Start server, configure Claude, run all 14 MCP
   tools successfully, check all success criteria (SC-001 through SC-010)
 
