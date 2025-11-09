@@ -1,0 +1,452 @@
+openapi: 3.0.3
+info:
+  title: Cost Query Service
+  description: |
+    MCP service for analyzing cloud infrastructure costs. Provides projected cost
+    estimates from Pulumi previews, historical actual costs, cost comparisons,
+    and resource-level analysis.
+  version: 1.0.0
+  contact:
+    name: PulumiCost MCP Server
+    url: https://github.com/rshade/pulumicost-mcp
+
+servers:
+  - url: http://localhost:8080/jsonrpc
+    description: Local development server
+  - url: https://pulumicost-mcp.example.com/jsonrpc
+    description: Production server
+
+paths:
+  /cost.analyze_projected:
+    post:
+      summary: Analyze projected costs from Pulumi JSON
+      description: |
+        Calculate estimated monthly costs for infrastructure defined in Pulumi
+        preview JSON. Returns total cost with per-resource breakdown grouped by
+        provider, service, and region.
+      operationId: analyzeProjected
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectedCostRequest'
+      responses:
+        '200':
+          description: Cost analysis completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CostResult'
+        '400':
+          description: Invalid request (missing Pulumi JSON, invalid format)
+        '500':
+          description: Internal server error
+      x-mcp-tool:
+        name: analyze_projected_costs
+        description: Calculate projected infrastructure costs before deployment
+
+  /cost.get_actual:
+    post:
+      summary: Get actual historical costs
+      description: |
+        Retrieve actual spending from cloud providers for a deployed stack over
+        a specified time range with configurable granularity.
+      operationId: getActual
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActualCostRequest'
+      responses:
+        '200':
+          description: Historical costs retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CostResult'
+        '400':
+          description: Invalid request (missing stack name or time range)
+        '404':
+          description: Stack not found or no cost data available
+        '500':
+          description: Internal server error
+      x-mcp-tool:
+        name: get_actual_costs
+        description: Retrieve historical cloud spending for deployed infrastructure
+
+  /cost.compare:
+    post:
+      summary: Compare costs between configurations
+      description: |
+        Compare projected or actual costs between two configurations (baseline
+        vs target) and identify cost differences with percentage changes.
+      operationId: compareCosts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CostComparisonRequest'
+      responses:
+        '200':
+          description: Cost comparison completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CostComparisonResult'
+        '400':
+          description: Invalid request (missing baseline or target)
+        '500':
+          description: Internal server error
+      x-mcp-tool:
+        name: compare_costs
+        description: Compare infrastructure costs between configurations
+
+  /cost.analyze_resource:
+    post:
+      summary: Analyze individual resource cost
+      description: |
+        Deep-dive cost analysis for a specific resource identified by URN.
+        Includes dependency tracking and trend analysis.
+      operationId: analyzeResource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceAnalysisRequest'
+      responses:
+        '200':
+          description: Resource analysis completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceAnalysisResult'
+        '400':
+          description: Invalid request (missing or malformed URN)
+        '404':
+          description: Resource not found
+        '500':
+          description: Internal server error
+      x-mcp-tool:
+        name: analyze_resource_cost
+        description: Get detailed cost analysis for a specific resource
+
+  /cost.query_by_tags:
+    post:
+      summary: Query costs by resource tags
+      description: |
+        Group and aggregate costs by resource tags for cost attribution.
+        Supports filtering by tag keys and values.
+      operationId: queryByTags
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagCostRequest'
+      responses:
+        '200':
+          description: Tag-based cost query completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagCostResult'
+        '400':
+          description: Invalid request (missing stack or tag filters)
+        '500':
+          description: Internal server error
+      x-mcp-tool:
+        name: query_cost_by_tags
+        description: Group costs by resource tags for cost attribution
+
+  /cost.analyze_stack:
+    post:
+      summary: Comprehensive stack analysis with streaming
+      description: |
+        Performs comprehensive cost analysis of an entire stack with real-time
+        progress updates via streaming. Suitable for large stacks.
+      operationId: analyzeStack
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StackAnalysisRequest'
+      responses:
+        '200':
+          description: Stack analysis stream started
+          content:
+            text/event-stream:
+              schema:
+                type: object
+                properties:
+                  progress:
+                    type: number
+                    minimum: 0
+                    maximum: 100
+                  message:
+                    type: string
+                  result:
+                    $ref: '#/components/schemas/CostResult'
+        '400':
+          description: Invalid request
+        '500':
+          description: Internal server error
+      x-mcp-tool:
+        name: analyze_stack_comprehensive
+        description: Comprehensive stack cost analysis with progress updates
+
+components:
+  schemas:
+    ProjectedCostRequest:
+      type: object
+      required:
+        - pulumi_json
+      properties:
+        pulumi_json:
+          type: string
+          description: Pulumi preview JSON output
+        filters:
+          $ref: '#/components/schemas/ResourceFilters'
+        group_by:
+          type: array
+          items:
+            type: string
+            enum: [provider, service, region, tag]
+
+    ActualCostRequest:
+      type: object
+      required:
+        - stack_name
+        - time_range
+      properties:
+        stack_name:
+          type: string
+        time_range:
+          $ref: '#/components/schemas/TimeRange'
+        granularity:
+          type: string
+          enum: [hourly, daily, monthly]
+          default: daily
+        filters:
+          $ref: '#/components/schemas/ResourceFilters'
+
+    CostComparisonRequest:
+      type: object
+      required:
+        - baseline
+        - target
+      properties:
+        baseline:
+          $ref: '#/components/schemas/CostQuery'
+        target:
+          $ref: '#/components/schemas/CostQuery'
+        comparison_type:
+          type: string
+          enum: [absolute, percentage]
+          default: both
+
+    ResourceAnalysisRequest:
+      type: object
+      required:
+        - resource_urn
+      properties:
+        resource_urn:
+          type: string
+        time_range:
+          $ref: '#/components/schemas/TimeRange'
+        include_dependencies:
+          type: boolean
+          default: true
+
+    TagCostRequest:
+      type: object
+      required:
+        - stack_name
+        - tag_keys
+      properties:
+        stack_name:
+          type: string
+        tag_keys:
+          type: array
+          items:
+            type: string
+        filters:
+          $ref: '#/components/schemas/TagFilters'
+
+    StackAnalysisRequest:
+      type: object
+      required:
+        - stack_name
+      properties:
+        stack_name:
+          type: string
+        include_recommendations:
+          type: boolean
+          default: false
+
+    CostQuery:
+      type: object
+      properties:
+        stack_name:
+          type: string
+        pulumi_json:
+          type: string
+        filters:
+          $ref: '#/components/schemas/ResourceFilters'
+
+    CostResult:
+      type: object
+      required:
+        - total_monthly
+        - currency
+        - resources
+      properties:
+        total_monthly:
+          type: number
+          format: double
+          minimum: 0
+        currency:
+          type: string
+          default: USD
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResourceCost'
+        by_provider:
+          type: object
+          additionalProperties:
+            type: number
+        by_service:
+          type: object
+          additionalProperties:
+            type: number
+        by_region:
+          type: object
+          additionalProperties:
+            type: number
+        timestamp:
+          type: string
+          format: date-time
+
+    ResourceCost:
+      type: object
+      required:
+        - urn
+        - type
+        - monthly_cost
+      properties:
+        urn:
+          type: string
+        type:
+          type: string
+        name:
+          type: string
+        provider:
+          type: string
+          enum: [aws, azure, gcp, kubernetes]
+        service:
+          type: string
+        region:
+          type: string
+        monthly_cost:
+          type: number
+          format: double
+        hourly_cost:
+          type: number
+          format: double
+        tags:
+          type: object
+          additionalProperties:
+            type: string
+
+    CostComparisonResult:
+      type: object
+      properties:
+        baseline_cost:
+          type: number
+        target_cost:
+          type: number
+        difference:
+          type: number
+        difference_percent:
+          type: number
+        resource_changes:
+          type: array
+          items:
+            type: object
+            properties:
+              urn:
+                type: string
+              change_type:
+                type: string
+                enum: [added, removed, increased, decreased, unchanged]
+              baseline_cost:
+                type: number
+              target_cost:
+                type: number
+
+    ResourceAnalysisResult:
+      type: object
+      properties:
+        resource:
+          $ref: '#/components/schemas/ResourceCost'
+        dependencies:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResourceCost'
+        trends:
+          type: object
+          properties:
+            daily_average:
+              type: number
+            weekly_average:
+              type: number
+            monthly_average:
+              type: number
+
+    TagCostResult:
+      type: object
+      properties:
+        by_tag:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: number
+
+    ResourceFilters:
+      type: object
+      properties:
+        provider:
+          type: string
+        resource_type:
+          type: string
+        region:
+          type: string
+
+    TagFilters:
+      type: object
+      properties:
+        key:
+          type: string
+        values:
+          type: array
+          items:
+            type: string
+
+    TimeRange:
+      type: object
+      required:
+        - start
+        - end
+      properties:
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time

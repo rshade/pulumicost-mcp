@@ -25,6 +25,10 @@ pulumicost:
   # PulumiCost spec version to use
   spec_version: "0.1.0"
 
+  # Batch processing configuration for large stacks
+  # For stacks with 1000+ resources, process in batches to prevent memory issues
+  batch_size: 100  # resources per batch
+
 plugins:
   # Plugin timeout
   timeout: "30s"

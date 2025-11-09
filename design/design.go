@@ -1,8 +1,8 @@
 package design
 
 import (
+	_ "goa.design/goa-ai" // Import to register the MCP plugin
 	. "goa.design/goa/v3/dsl"
-	mcp "goa.design/goa-ai/dsl"
 )
 
 // API defines the global properties of the PulumiCost MCP API
@@ -22,16 +22,9 @@ var _ = API("pulumicost-mcp", func() {
 		// MCP-specific services
 		Services("cost", "plugin", "analysis")
 	})
-
-	// MCP server configuration
-	mcp.MCPServer("pulumicost", "1.0.0", func() {
-		Description("Cloud cost analysis and optimization for infrastructure as code")
-		mcp.ServerCapability("tools")
-		mcp.ServerCapability("resources")
-	})
 })
 
-// Common error responses
+// InternalError represents an internal server error response
 var InternalError = Type("InternalError", func() {
 	Description("Internal server error")
 	Attribute("message", String, "Error message")
@@ -39,6 +32,7 @@ var InternalError = Type("InternalError", func() {
 	Required("message")
 })
 
+// NotFoundError represents a resource not found error response
 var NotFoundError = Type("NotFoundError", func() {
 	Description("Resource not found")
 	Attribute("message", String, "Error message")
@@ -46,6 +40,7 @@ var NotFoundError = Type("NotFoundError", func() {
 	Required("message")
 })
 
+// ValidationError represents a validation error response
 var ValidationError = Type("ValidationError", func() {
 	Description("Validation error")
 	Attribute("message", String, "Error message")

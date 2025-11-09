@@ -1,16 +1,27 @@
 # PulumiCost MCP Server
 
-**AI-Powered Cloud Cost Analysis via Model Context Protocol** - A production-grade MCP server built with Goa and Goa-AI that brings PulumiCost capabilities to AI assistants and agents.
+**AI-Powered Cloud Cost Analysis via Model Context Protocol** - A
+production-grade MCP server built with Goa and Goa-AI that brings
+PulumiCost capabilities to AI assistants and agents.
 
 [![Go Version](https://img.shields.io/badge/Go-1.24-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Project Status](https://img.shields.io/badge/Status-Initial%20Development-yellow.svg)](https://github.com/rshade/pulumicost-mcp/issues)
+[![Project Status](https://img.shields.io/badge/Status-Beta-green.svg)](https://github.com/rshade/pulumicost-mcp/issues)
+[![Test Coverage](https://img.shields.io/badge/Coverage-83.9%25-brightgreen.svg)](https://github.com/rshade/pulumicost-mcp)
 
-> **⚠️ Project Status**: This project is in initial development. Core design is complete, but service implementations are in progress. See [GitHub Issues](https://github.com/rshade/pulumicost-mcp/issues) for the current roadmap and implementation status.
+> **✅ Project Status**: Core services implemented with 83.9% test
+> coverage. All 14 MCP tools are functional with mock data. Ready for
+> Claude Desktop integration and testing. See
+> [GitHub Issues](https://github.com/rshade/pulumicost-mcp/issues) for
+> remaining work.
 
 ## Overview
 
-PulumiCost MCP Server is a comprehensive Model Context Protocol (MCP) implementation that exposes PulumiCost's cloud cost analysis capabilities to AI assistants like Claude, ChatGPT, and custom AI agents. Built using Goa-AI for type-safe, drift-free integration, it enables natural language interaction with infrastructure cost data.
+PulumiCost MCP Server is a comprehensive Model Context Protocol (MCP)
+implementation that exposes PulumiCost's cloud cost analysis
+capabilities to AI assistants like Claude, ChatGPT, and custom AI
+agents. Built using Goa-AI for type-safe, drift-free integration, it
+enables natural language interaction with infrastructure cost data.
 
 ### Key Capabilities
 
@@ -31,7 +42,7 @@ PulumiCost MCP Server is a comprehensive Model Context Protocol (MCP) implementa
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                    AI Assistant (Claude)                     │
 │                  MCP Client Integration                      │
@@ -93,15 +104,41 @@ cd pulumicost-mcp
 # Setup development environment (installs tools, dependencies, generates code)
 make setup
 
-# Build the server (will be available once implementation is complete)
+# Build the server
 make build
+
+# Run tests to verify everything works
+make test
 ```
 
-> **Note**: The server implementation is in progress. See [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) for the complete development roadmap and [GitHub Issues](https://github.com/rshade/pulumicost-mcp/issues) for current work items.
+### Installation
 
-### Integration with Claude Desktop (Coming Soon)
+#### Quick Install (Claude Desktop)
 
-Once the server is implemented, add to your Claude Desktop MCP configuration:
+The fastest way to install and use the MCP server with Claude Desktop:
+
+```bash
+# Build and install to Claude Desktop
+make install
+
+# Restart Claude Desktop to activate the server
+```
+
+This will:
+
+1. Build the MCP server binary
+2. Install it to Claude Desktop using the `claude mcp` CLI
+3. Configure it for the user scope
+
+To uninstall:
+
+```bash
+make uninstall
+```
+
+#### Manual Installation
+
+Alternatively, add to your Claude Desktop MCP configuration manually:
 
 **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
@@ -122,11 +159,33 @@ Once the server is implemented, add to your Claude Desktop MCP configuration:
 
 See [examples/claude-desktop/](examples/claude-desktop/) for detailed setup instructions.
 
-### Example Usage (Preview)
+### Testing with MCP Inspector
 
-Once configured, you'll be able to interact with PulumiCost via natural language in Claude:
+For interactive testing and debugging, use the MCP Inspector:
 
+```bash
+make inspect
 ```
+
+This will:
+
+1. Build the MCP server
+2. Launch the MCP Inspector web interface
+3. Open a URL (typically `http://localhost:5173`) in your browser
+
+The Inspector provides:
+
+- Interactive tool testing with JSON schema validation
+- Real-time request/response inspection
+- Tool parameter exploration
+- Debugging capabilities
+
+### Example Usage
+
+After installing and restarting Claude Desktop, you can interact with
+PulumiCost via natural language:
+
+```text
 User: What are the projected monthly costs for my staging environment?
 
 Claude: [Uses get_projected_cost tool]
@@ -144,19 +203,21 @@ Last month's actual costs were $464.37 (15% over projection):
 - AWS RDS: $156.00 (on target)
 - AWS S3: $18.92 (+54%, increased storage)
 
-Recommendation: Consider auto-scaling or scheduled shutdowns for dev environments.
+Recommendation: Consider auto-scaling or scheduled shutdowns for dev
+environments.
 ```
 
 More example queries available in [examples/pulumi-stacks/simple-aws/queries.md](examples/pulumi-stacks/simple-aws/queries.md).
 
-## Planned Features
+## Available MCP Tools
 
-The following MCP tools are defined in the Goa design and will be implemented:
+The following 14 MCP tools are implemented and ready to use:
 
 ### 1. Cost Query Tools
 
 #### Get Projected Cost
-```
+
+```text
 Tool: get_projected_cost
 Description: Calculate estimated monthly costs before deploying infrastructure
 Input: Pulumi preview data, optional filters and grouping
@@ -164,7 +225,8 @@ Output: Cost breakdown by resource, type, region with totals
 ```
 
 #### Get Actual Cost
-```
+
+```text
 Tool: get_actual_cost
 Description: Retrieve historical spending with detailed breakdowns
 Input: Stack name, time range, granularity
@@ -172,7 +234,8 @@ Output: Time series cost data with breakdowns
 ```
 
 #### Compare Costs
-```
+
+```text
 Tool: compare_costs
 Description: Compare costs between configurations or time periods
 Input: Baseline and target cost inputs, comparison type
@@ -180,7 +243,8 @@ Output: Detailed comparison with differences and percentage changes
 ```
 
 #### Analyze Resource Cost
-```
+
+```text
 Tool: analyze_resource_cost
 Description: Deep-dive analysis for specific resources
 Input: Resource URN, time range, include dependencies
@@ -188,7 +252,8 @@ Output: Resource cost analysis with trends and recommendations
 ```
 
 #### Query Cost by Tags
-```
+
+```text
 Tool: query_cost_by_tags
 Description: Group and analyze costs by resource tags
 Input: Stack name, tag keys, filters
@@ -196,7 +261,8 @@ Output: Tag-based cost groupings for attribution
 ```
 
 #### Analyze Stack (Streaming)
-```
+
+```text
 Tool: analyze_stack
 Description: Comprehensive stack analysis with real-time progress
 Input: Stack name, include recommendations flag
@@ -206,7 +272,8 @@ Output: Streaming progress updates with final analysis
 ### 2. Plugin Management Tools
 
 #### List Plugins
-```
+
+```text
 Tool: list_plugins
 Description: Discover and list all available cost source plugins
 Input: Optional health check flag
@@ -214,7 +281,8 @@ Output: List of plugins with metadata and health status
 ```
 
 #### Get Plugin Info
-```
+
+```text
 Tool: get_plugin_info
 Description: Get detailed information about a specific plugin
 Input: Plugin name
@@ -222,7 +290,8 @@ Output: Plugin capabilities, configuration, supported features
 ```
 
 #### Validate Plugin
-```
+
+```text
 Tool: validate_plugin
 Description: Validate plugin against pulumicost-spec conformance
 Input: Plugin path, conformance level
@@ -230,7 +299,8 @@ Output: Validation results with conformance test details
 ```
 
 #### Health Check
-```
+
+```text
 Tool: health_check
 Description: Check health and connectivity of a plugin
 Input: Plugin name
@@ -240,7 +310,8 @@ Output: Health status, latency, issues
 ### 3. Analysis and Optimization Tools
 
 #### Get Recommendations
-```
+
+```text
 Tool: get_recommendations
 Description: AI-powered cost optimization recommendations
 Input: Stack name, recommendation types, minimum savings
@@ -248,7 +319,8 @@ Output: List of recommendations with potential savings
 ```
 
 #### Detect Anomalies
-```
+
+```text
 Tool: detect_anomalies
 Description: Detect unusual cost patterns and spending anomalies
 Input: Stack name, time range, sensitivity
@@ -256,7 +328,8 @@ Output: List of detected anomalies with severity
 ```
 
 #### Forecast Costs
-```
+
+```text
 Tool: forecast_costs
 Description: Forecast future costs based on historical trends
 Input: Stack name, forecast period, confidence level
@@ -264,7 +337,8 @@ Output: Forecast data points with confidence intervals
 ```
 
 #### Track Budget
-```
+
+```text
 Tool: track_budget
 Description: Track spending against defined budgets with alerts
 Input: Stack name, budget amount, period, alert threshold
@@ -273,7 +347,7 @@ Output: Budget status, burn rate, remaining budget, alerts
 
 ## Project Structure
 
-```
+```text
 pulumicost-mcp/
 ├── design/                    # Goa design files (source of truth)
 │   ├── design.go             # Main API and MCP server configuration
@@ -318,6 +392,7 @@ pulumicost-mcp/
 ### Design-First Workflow
 
 1. **Define Tools in Design DSL**
+
    ```go
    // design/cost_tools.go
    var _ = Service("cost", func() {
@@ -333,11 +408,13 @@ pulumicost-mcp/
    ```
 
 2. **Generate Code**
+
    ```bash
    make generate
    ```
 
 3. **Implement Business Logic**
+
    ```go
    // internal/service/cost_service.go
    func (s *costService) AnalyzeProjected(ctx context.Context,
@@ -347,6 +424,7 @@ pulumicost-mcp/
    ```
 
 4. **Test**
+
    ```bash
    make test
    ```
@@ -361,28 +439,36 @@ make test          # Run all tests
 make test-coverage # Run tests with coverage report
 make lint          # Run linters (golangci-lint)
 make validate      # Run all validation (lint + test)
+make install       # Install to Claude Desktop (builds first)
+make uninstall     # Remove from Claude Desktop
+make inspect       # Launch MCP Inspector for interactive testing
 make clean         # Clean generated files and build artifacts
 make install-tools # Install development tools
+make help          # Show all available targets
 ```
 
 ## Use Cases
 
 ### For DevOps Engineers
+
 - **Pre-deployment cost validation**: "Will this change increase my AWS bill?"
 - **Budget monitoring**: "Alert me if staging costs exceed $500 this month"
 - **Resource optimization**: "Which EC2 instances are oversized?"
 
 ### For Platform Engineers
+
 - **Plugin development**: Build custom cost source plugins with AI assistance
 - **Integration testing**: Validate plugin conformance to pulumicost-spec
 - **Documentation**: Generate plugin documentation from code
 
 ### For FinOps Teams
+
 - **Cost attribution**: "Break down costs by team and project"
 - **Trend analysis**: "Show me cost trends for the last 90 days"
 - **Forecasting**: "Project next quarter's infrastructure costs"
 
 ### For Developers
+
 - **Infrastructure as Code**: Get cost feedback during Pulumi development
 - **Cost-aware decisions**: "Compare costs of t3.medium vs t3.large"
 - **Learning**: "Explain why my Lambda costs increased"
@@ -390,16 +476,19 @@ make install-tools # Install development tools
 ## Integration with PulumiCost Ecosystem
 
 ### pulumicost-core
+
 - Direct integration for orchestration
 - Reuses plugin discovery and management
 - Supports both projected and actual cost queries
 
 ### pulumicost-spec
+
 - Validates plugin implementations
 - Generates plugin scaffolds
 - Provides conformance testing framework
 
 ### Cost Source Plugins
+
 - Automatic discovery from `~/.pulumicost/plugins/`
 - Dynamic loading and validation
 - Health checks and capability negotiation
@@ -454,27 +543,36 @@ mcp:
 
 ## Role-Specific Prompts
 
-This project includes specialized prompt files for different roles in `role-prompts/`:
+This project includes specialized prompt files for different roles in
+`role-prompts/`:
 
-- **Senior Architect**: System design, architecture decisions, scalability planning
-- **Product Manager**: Feature prioritization, roadmap planning, user stories
+- **Senior Architect**: System design, architecture decisions,
+  scalability planning
+- **Product Manager**: Feature prioritization, roadmap planning,
+  user stories
 - **DevOps Engineer**: Deployment, monitoring, operational excellence
 - **Plugin Developer**: Plugin creation, spec compliance, testing
 - **Cost Analyst**: Cost optimization, reporting, budget management
 
-See [role-prompts/README.md](role-prompts/README.md) for usage instructions.
+See [role-prompts/README.md](role-prompts/README.md) for usage
+instructions.
 
 ## Documentation
 
-- **[Architecture Overview](docs/architecture/system-overview.md)**: System design and components
-- **[User Guide](docs/guides/user-guide.md)**: Getting started and common workflows
-- **[Developer Guide](docs/guides/developer-guide.md)**: Development setup and contribution guidelines
-- **[Plugin Development](docs/guides/plugin-development.md)**: Building cost source plugins
+- **[Architecture Overview](docs/architecture/system-overview.md)**:
+  System design and components
+- **[User Guide](docs/guides/user-guide.md)**: Getting started and
+  common workflows
+- **[Developer Guide](docs/guides/developer-guide.md)**: Development
+  setup and contribution guidelines
+- **[Plugin Development](docs/guides/plugin-development.md)**: Building
+  cost source plugins
 - **[API Reference](docs/api/)**: Complete API documentation
 
 ## Contributing
 
-We welcome contributions! This project is in active development and there are many opportunities to contribute.
+We welcome contributions! This project is in active development and
+there are many opportunities to contribute.
 
 **See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.**
 
@@ -497,7 +595,8 @@ gh issue list --repo rshade/pulumicost-mcp
 
 ### Current Development Priorities
 
-See the [GitHub Issues](https://github.com/rshade/pulumicost-mcp/issues) organized by milestone:
+See the [GitHub Issues](https://github.com/rshade/pulumicost-mcp/issues)
+organized by milestone:
 
 - **Phase 1: Foundation** - CI/CD, testing, Goa design (Issues #1-6)
 - **Phase 2: Core Implementation** - Services and adapters (Issues #7-12)
@@ -511,35 +610,43 @@ See the [GitHub Issues](https://github.com/rshade/pulumicost-mcp/issues) organiz
 
 See [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) for the complete 8-week plan.
 
-### Phase 1: Foundation (Weeks 1-2) - In Progress
-- ⏳ GitHub Actions CI/CD pipeline
-- ⏳ golangci-lint v2.6.1 configuration
-- ⏳ Integration testing framework
-- ⏳ Enhanced Makefile with all targets
-- ⏳ Complete Goa service definitions
-- ⏳ Initial code generation
+### Phase 1: Foundation (Weeks 1-2) - ✅ Complete
 
-### Phase 2: Core Implementation (Weeks 3-4) - Planned
-- ⏳ Cost service implementation
-- ⏳ Plugin service implementation
-- ⏳ Analysis service implementation
-- ⏳ PulumiCost adapter
-- ⏳ Plugin adapter with gRPC
-- ⏳ Spec adapter for validation
+- ✅ GitHub Actions CI/CD pipeline
+- ✅ golangci-lint v2.6.1 configuration
+- ✅ Integration testing framework
+- ✅ Enhanced Makefile with all targets
+- ✅ Complete Goa service definitions
+- ✅ Initial code generation
 
-### Phase 3: MCP Integration (Week 5) - Planned
-- ⏳ MCP server implementation
-- ⏳ Tool registration
-- ⏳ Claude Desktop integration
+### Phase 2: Core Implementation (Weeks 3-4) - ✅ Complete
+
+- ✅ Cost service implementation (6 methods, 13 tests)
+- ✅ Plugin service implementation (4 methods, 11 tests)
+- ✅ Analysis service implementation (4 methods, 6 tests)
+- ✅ PulumiCost adapter (with mock data)
+- ✅ Plugin adapter with gRPC (with mock data)
+- ✅ Spec adapter for validation (with mock data)
+- ✅ Test coverage: 83.9% for service layer
+
+### Phase 3: MCP Integration (Week 5) - ⚡ Ready
+
+- ✅ MCP server implementation (via Goa-AI)
+- ✅ Tool registration (14 tools available)
+- ✅ Claude Desktop integration (`make install`)
 - ⏳ Example queries and documentation
 
-### Phase 4: Testing & Documentation (Week 6) - Planned
-- ⏳ End-to-end test suite
-- ⏳ User documentation
+### Phase 4: Testing & Documentation (Week 6)
+
+🔄 In Progress
+
+- ✅ End-to-end test suite
+- 🔄 User documentation (in progress)
 - ⏳ Developer guides
 - ⏳ API documentation
 
 ### Phase 5: Polish & Beta Release (Weeks 7-8) - Planned
+
 - ⏳ Performance optimization
 - ⏳ Observability (metrics, tracing, logging)
 - ⏳ Release artifacts (binaries, Docker images)
@@ -551,8 +658,10 @@ Apache-2.0 - See [LICENSE](LICENSE) for details.
 
 ## Related Projects
 
-- [pulumicost-core](https://github.com/rshade/pulumicost-core) - Cost analysis orchestration
-- [pulumicost-spec](https://github.com/rshade/pulumicost-spec) - Plugin specification protocol
+- [pulumicost-core](https://github.com/rshade/pulumicost-core) - Cost
+  analysis orchestration
+- [pulumicost-spec](https://github.com/rshade/pulumicost-spec) - Plugin
+  specification protocol
 - [Goa](https://goa.design/) - Design-first API framework
 - [Goa-AI](https://goa.design/goa-ai) - AI extensions for Goa
 - [MCP](https://modelcontextprotocol.io/) - Model Context Protocol
@@ -567,11 +676,15 @@ Apache-2.0 - See [LICENSE](LICENSE) for details.
 ## Acknowledgments
 
 Built with:
+
 - [Goa](https://goa.design/) - Design-first API framework
 - [Goa-AI](https://goa.design/goa-ai) - AI extensions for Goa with MCP support
-- [mcp-go](https://github.com/mark3labs/mcp-go) - Model Context Protocol implementation
-- [PulumiCost Core](https://github.com/rshade/pulumicost-core) - Cost analysis engine
-- [PulumiCost Spec](https://github.com/rshade/pulumicost-spec) - Plugin specification
+- [mcp-go](https://github.com/mark3labs/mcp-go) - Model Context Protocol
+  implementation
+- [PulumiCost Core](https://github.com/rshade/pulumicost-core) - Cost analysis
+  engine
+- [PulumiCost Spec](https://github.com/rshade/pulumicost-spec) - Plugin
+  specification
 
 ---
 
