@@ -91,29 +91,29 @@ This phase BLOCKS all user story implementation.
 
 ### Goa Design Files (Design Layer)
 
-- [ ] T011 Create design/design.go with API metadata, MCP server configuration,
+- [x] T011 Create design/design.go with API metadata, MCP server configuration,
   and three service definitions
-- [ ] T012 [P] Define all core types in design/types.go: CostQuery, CostResult,
+- [x] T012 [P] Define all core types in design/types.go: CostQuery, CostResult,
   ResourceCost, ResourceFilter, TagFilter, TimeRange, CostMetadata (14 types
   total from data-model.md)
-- [ ] T013 [P] Define plugin types in design/types.go: Plugin, PluginCapabilities,
+- [x] T013 [P] Define plugin types in design/types.go: Plugin, PluginCapabilities,
   HealthStatus, PluginValidationReport, ValidationTest (5 types)
-- [ ] T014 [P] Define analysis types in design/types.go: Recommendation, Anomaly,
+- [x] T014 [P] Define analysis types in design/types.go: Recommendation, Anomaly,
   Forecast, ForecastPoint, Budget (5 types)
-- [ ] T015 Create design/cost_service.go with Cost Query Service definition (6
+- [x] T015 Create design/cost_service.go with Cost Query Service definition (6
   MCP tools from cost-service.yaml)
-- [ ] T016 Create design/plugin_service.go with Plugin Management Service
+- [x] T016 Create design/plugin_service.go with Plugin Management Service
   definition (4 MCP tools from plugin-service.yaml)
-- [ ] T017 Create design/analysis_service.go with Analysis Service definition (4
+- [x] T017 Create design/analysis_service.go with Analysis Service definition (4
   MCP tools from analysis-service.yaml)
-- [ ] T018 Run `goa gen` to generate code in gen/cost/, gen/plugin/,
+- [x] T018 Run `goa gen` to generate code in gen/cost/, gen/plugin/,
   gen/analysis/, gen/http/, gen/jsonrpc/, gen/mcp/
-- [ ] T019 Verify generated code compiles without errors (`go build ./...`)
-- [ ] T020 [P] Create internal/config/config.go with configuration loading
+- [x] T019 Verify generated code compiles without errors (`go build ./...`)
+- [x] T020 [P] Create internal/config/config.go with configuration loading
   (server, pulumicost, plugins sections)
-- [ ] T021 [P] Create internal/config/config_test.go with configuration
+- [x] T021 [P] Create internal/config/config_test.go with configuration
   validation tests
-- [ ] T022 Commit design/ and gen/ together per Constitution Principle I (never
+- [x] T022 Commit design/ and gen/ together per Constitution Principle I (never
   commit design without gen or vice versa)
 
 **Validation**: `make generate` produces valid code, `go build ./...` succeeds,

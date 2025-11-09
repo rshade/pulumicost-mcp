@@ -1,4 +1,4 @@
-.PHONY: help generate build test lint clean install run validate setup install-tools tidy
+.PHONY: help generate build test lint clean install uninstall inspect run validate setup install-tools tidy
 
 # Variables
 BINARY_NAME=pulumicost-mcp
@@ -37,10 +37,22 @@ run: build ## Run the server locally
 	@echo "$(COLOR_GREEN)Starting $(BINARY_NAME)...$(COLOR_RESET)"
 	@$(BUILD_DIR)/$(BINARY_NAME) --config config.yaml
 
-install: build ## Install binary to $GOPATH/bin
-	@echo "$(COLOR_GREEN)Installing $(BINARY_NAME)...$(COLOR_RESET)"
-	@go install $(CMD_DIR)/main.go
-	@echo "$(COLOR_GREEN)✓ Installed to $(shell go env GOPATH)/bin/$(BINARY_NAME)$(COLOR_RESET)"
+install: build ## Install the MCP server to Claude Desktop
+	@echo "$(COLOR_GREEN)Installing $(BINARY_NAME) to Claude Desktop...$(COLOR_RESET)"
+	@claude mcp remove pulumicost --scope user 2>/dev/null || true
+	@claude mcp add pulumicost --scope user -- $$(realpath $(BUILD_DIR)/$(BINARY_NAME))
+	@echo ""
+	@echo "$(COLOR_GREEN)✓ Installation complete! Please restart Claude Desktop to use the server.$(COLOR_RESET)"
+
+uninstall: ## Uninstall the MCP server from Claude Desktop
+	@echo "$(COLOR_GREEN)Uninstalling $(BINARY_NAME) from Claude Desktop...$(COLOR_RESET)"
+	@claude mcp remove pulumicost --scope user
+	@echo "$(COLOR_GREEN)✓ Uninstallation complete! Please restart Claude Desktop.$(COLOR_RESET)"
+
+inspect: build ## Launch the MCP Inspector for interactive testing
+	@echo "$(COLOR_GREEN)Starting MCP Inspector for $(BINARY_NAME)...$(COLOR_RESET)"
+	@echo "$(COLOR_YELLOW)Open the URL shown below in your browser to interact with the MCP server$(COLOR_RESET)"
+	@npx @modelcontextprotocol/inspector $$(realpath $(BUILD_DIR)/$(BINARY_NAME))
 
 ##@ Testing
 
