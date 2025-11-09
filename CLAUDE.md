@@ -54,6 +54,203 @@ make clean
 - `examples/pulumi-stacks/` - Example Pulumi projects for testing
 - `examples/queries/` - Example MCP queries
 - `role-prompts/` - AI assistant role-specific contexts
+- `.github/workflows/` - CI/CD pipeline configuration
+
+## CI/CD Pipeline
+
+### Overview
+
+The project uses GitHub Actions for continuous integration and deployment. All workflows are defined in `.github/workflows/`.
+
+### Workflows
+
+#### Main CI Workflow (`.github/workflows/ci.yml`)
+
+Runs on every push and pull request to `main` and `develop` branches.
+
+**Jobs:**
+
+1. **generate-check** - Verifies code generation is up to date
+   - Runs `make generate`
+   - Fails if generated code differs from committed code
+   - Ensures design and generated code stay in sync
+
+2. **test** - Runs test suite with coverage
+   - Executes `make test-coverage`
+   - Uploads coverage to Codecov
+   - Requires 80%+ coverage (target)
+
+3. **lint** - Runs code quality checks
+   - Uses golangci-lint v2.6.0
+   - Configuration in `.golangci.yml`
+   - 5-minute timeout
+   - Checks 40+ linters
+
+4. **build** - Builds binaries for all platforms
+   - Matrix build: linux, darwin, windows
+   - Architectures: amd64, arm64
+   - Uploads artifacts for 7 days
+   - Verifies cross-compilation works
+
+#### Release Workflow (`.github/workflows/release.yml`)
+
+Triggers on version tags (e.g., `v1.0.0`).
+
+**Steps:**
+1. Runs full test suite and linters
+2. Builds release artifacts for all platforms
+3. Generates SHA256 checksums
+4. Creates GitHub release with artifacts
+5. Builds and pushes Docker image to ghcr.io
+6. Tags Docker image with version and semver patterns
+
+**Docker Tags Generated:**
+- `vX.Y.Z` (exact version)
+- `X.Y` (major.minor)
+- `X` (major)
+- `sha-<commit>` (git sha)
+
+#### CodeQL Security Analysis (`.github/workflows/codeql.yml`)
+
+Runs on:
+- Push to main/develop
+- Pull requests
+- Weekly schedule (Mondays at 6:00 AM UTC)
+- Manual dispatch
+
+**Features:**
+- Scans Go code for security vulnerabilities
+- Uses security-and-quality query suite
+- Results visible in Security tab
+- Integrates with GitHub Security Advisories
+
+#### Dependabot (`.github/dependabot.yml`)
+
+Automated dependency updates for:
+- **Go modules** - Weekly updates on Mondays
+- **GitHub Actions** - Weekly version bumps
+- **Docker** - Weekly base image updates
+
+**Configuration:**
+- Groups related dependencies (Goa, Pulumi, AWS, Azure, etc.)
+- Limits to 5 open PRs per ecosystem
+- Auto-assigns to @rshade
+- Labels PRs with `dependencies` and ecosystem type
+
+### Linter Configuration
+
+File: `.golangci.yml`
+
+**Enabled Linters (40+):**
+- **Quality**: errcheck, gosimple, govet, staticcheck, unused
+- **Style**: gofmt, gofumpt, goimports, revive, stylecheck
+- **Security**: gosec, errorlint
+- **Performance**: gocritic
+- **Complexity**: gocyclo, gocognit
+- **Bug Detection**: bodyclose, rowserrcheck, sqlclosecheck
+- **Best Practices**: misspell, whitespace, predeclared
+
+**Special Rules:**
+- Skips `gen/` directory (generated code)
+- Allows dot imports in `design/` (Goa DSL)
+- Relaxed rules for `*_test.go` files
+- 5-minute timeout
+- All linters enabled except overly strict ones
+
+### Pull Request Template
+
+File: `.github/pull_request_template.md`
+
+**Sections:**
+- Description and type of change
+- Related issues (auto-closes with "Closes #123")
+- Changes made
+- Testing evidence
+- Code generation checklist
+- Documentation updates
+- Breaking changes
+
+**Required Checks:**
+- [ ] Tests pass (`make test`)
+- [ ] Linters pass (`make lint`)
+- [ ] Code generation up to date (`make generate`)
+- [ ] Documentation updated
+
+### CI/CD Best Practices
+
+1. **Design-First Validation**
+   - Always run `make generate` after design changes
+   - CI enforces design/generated code sync
+   - Commit both design and generated code together
+
+2. **Test Coverage**
+   - Target 80%+ coverage
+   - Coverage tracked in Codecov
+   - Unit tests run on every PR
+   - Integration tests run on main branch
+
+3. **Security**
+   - CodeQL scans weekly and on PRs
+   - Dependabot keeps dependencies current
+   - gosec linter catches security issues
+   - No secrets in code (enforced by .gitignore)
+
+4. **Release Process**
+   ```bash
+   # 1. Update version in relevant files
+   # 2. Commit changes
+   git add .
+   git commit -m "chore: bump version to v1.0.0"
+
+   # 3. Create and push tag
+   git tag -a v1.0.0 -m "Release v1.0.0"
+   git push origin v1.0.0
+
+   # 4. GitHub Actions automatically:
+   #    - Runs tests and linters
+   #    - Builds multi-platform binaries
+   #    - Creates GitHub release
+   #    - Builds and pushes Docker image
+   ```
+
+5. **Debugging CI Failures**
+   - **Generate check fails**: Run `make generate` locally and commit
+   - **Tests fail**: Check logs in Actions tab, run `make test` locally
+   - **Linter fails**: Run `make lint` locally, fix issues
+   - **Build fails**: Verify `go.mod` dependencies, run `make build`
+
+### Status Badges
+
+Add to README.md:
+
+```markdown
+[![CI](https://github.com/rshade/pulumicost-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/rshade/pulumicost-mcp/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/rshade/pulumicost-mcp/actions/workflows/codeql.yml/badge.svg)](https://github.com/rshade/pulumicost-mcp/actions/workflows/codeql.yml)
+[![codecov](https://codecov.io/gh/rshade/pulumicost-mcp/branch/main/graph/badge.svg)](https://codecov.io/gh/rshade/pulumicost-mcp)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rshade/pulumicost-mcp)](https://goreportcard.com/report/github.com/rshade/pulumicost-mcp)
+```
+
+### Environment Secrets
+
+Configure in GitHub Settings → Secrets:
+
+- `CODECOV_TOKEN` - For coverage uploads (optional but recommended)
+- `GITHUB_TOKEN` - Auto-provided for releases and Docker pushes
+
+### Local CI Testing
+
+While you can't run GitHub Actions locally, you can simulate CI checks:
+
+```bash
+# Run the full CI pipeline locally
+make generate  # Verify code generation
+make lint      # Run all linters
+make test      # Run tests
+make build     # Build binary
+
+# Or use the combined target
+make validate  # Runs lint + test
+```
 
 ## Architecture Principles
 
