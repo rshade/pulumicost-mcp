@@ -1,7 +1,6 @@
 package design
 
 import (
-	_ "goa.design/goa-ai" // Import to register the MCP plugin
 	. "goa.design/goa/v3/dsl"
 )
 

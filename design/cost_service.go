@@ -1,7 +1,6 @@
 package design
 
 import (
-	_ "goa.design/goa-ai" // Import to register the MCP plugin
 	mcp "goa.design/goa-ai/dsl"
 	. "goa.design/goa/v3/dsl"
 )
@@ -10,7 +9,7 @@ var _ = Service("cost", func() {
 	Description("Cost Query Service for analyzing cloud infrastructure costs")
 
 	// Enable MCP for this service
-	mcp.MCPServer("cost-mcp", "1.0.0")
+	mcp.MCP("cost-mcp", "1.0.0")
 
 	// JSON-RPC transport with SSE support
 	JSONRPC(func() {
