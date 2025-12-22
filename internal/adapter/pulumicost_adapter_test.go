@@ -187,6 +187,119 @@ func TestGetActualCost_WithGranularity(t *testing.T) {
 	assert.NotNil(t, result.Breakdown)
 }
 
+// TestGetProjectedCost_WithMultipleFilters tests various filter combinations
+func TestGetProjectedCost_WithMultipleFilters(t *testing.T) {
+	adapter := NewPulumiCostAdapter("./testdata/mock_pulumicost.sh")
+	ctx := context.Background()
+
+	pulumiJSON := `{
+		"resources": [
+			{
+				"urn": "urn:pulumi:dev::myapp::aws:ec2/instance:Instance::web-1",
+				"type": "aws:ec2/instance:Instance",
+				"inputs": {"instanceType": "t3.micro"}
+			}
+		]
+	}`
+
+	tests := []struct {
+		name    string
+		filters *ResourceFilters
+	}{
+		{
+			name: "filter by resource type",
+			filters: &ResourceFilters{
+				ResourceType: stringPtr("aws:ec2/instance:Instance"),
+			},
+		},
+		{
+			name: "filter by region",
+			filters: &ResourceFilters{
+				Region: stringPtr("us-east-1"),
+			},
+		},
+		{
+			name: "filter by name pattern",
+			filters: &ResourceFilters{
+				NamePattern: stringPtr("web"),
+			},
+		},
+		{
+			name: "filter by tags",
+			filters: &ResourceFilters{
+				Tags: map[string]string{
+					"environment": "dev",
+				},
+			},
+		},
+		{
+			name: "filter by provider and type",
+			filters: &ResourceFilters{
+				Provider:     stringPtr("aws"),
+				ResourceType: stringPtr("aws:ec2/instance:Instance"),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := adapter.GetProjectedCostWithFilters(ctx, pulumiJSON, tt.filters)
+			require.NoError(t, err)
+			require.NotNil(t, result)
+		})
+	}
+}
+
+// TestGetProjectedCost_FilterNoMatches tests filters that don't match any resources
+func TestGetProjectedCost_FilterNoMatches(t *testing.T) {
+	adapter := NewPulumiCostAdapter("./testdata/mock_pulumicost.sh")
+	ctx := context.Background()
+
+	pulumiJSON := `{
+		"resources": [
+			{
+				"urn": "urn:pulumi:dev::myapp::aws:ec2/instance:Instance::web-1",
+				"type": "aws:ec2/instance:Instance",
+				"inputs": {"instanceType": "t3.micro"}
+			}
+		]
+	}`
+
+	filters := &ResourceFilters{
+		Provider: stringPtr("gcp"), // No GCP resources in the mock data
+	}
+
+	result, err := adapter.GetProjectedCostWithFilters(ctx, pulumiJSON, filters)
+
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	// When filters don't match, we should get empty or filtered results
+	// The mock always returns data, so we just verify no error
+}
+
+// TestGetActualCost_WithMultipleGranularities tests different time granularities
+func TestGetActualCost_WithMultipleGranularities(t *testing.T) {
+	adapter := NewPulumiCostAdapter("./testdata/mock_pulumicost.sh")
+	ctx := context.Background()
+
+	stackName := "myapp-dev"
+	timeRange := TimeRange{
+		Start: "2024-01-01T00:00:00Z",
+		End:   "2024-01-31T23:59:59Z",
+	}
+
+	granularities := []string{"hourly", "daily", "monthly"}
+
+	for _, granularity := range granularities {
+		t.Run(granularity, func(t *testing.T) {
+			result, err := adapter.GetActualCostWithGranularity(ctx, stackName, timeRange, granularity)
+			require.NoError(t, err)
+			require.NotNil(t, result)
+			assert.Greater(t, result.TotalMonthly, 0.0)
+		})
+	}
+}
+
 // Helper functions
 func stringPtr(s string) *string {
 	return &s
