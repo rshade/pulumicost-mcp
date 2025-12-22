@@ -69,7 +69,7 @@ func (a *SpecAdapter) ValidatePlugin(ctx context.Context, p *plugin.Plugin, conf
 }
 
 // RunBasicTests runs basic conformance tests
-func (a *SpecAdapter) RunBasicTests(ctx context.Context, p *plugin.Plugin) ([]TestResult, error) {
+func (a *SpecAdapter) RunBasicTests(_ context.Context, _ *plugin.Plugin) ([]TestResult, error) {
 	// Basic tests would verify:
 	// - Plugin starts successfully
 	// - Health check responds
@@ -80,7 +80,7 @@ func (a *SpecAdapter) RunBasicTests(ctx context.Context, p *plugin.Plugin) ([]Te
 }
 
 // RunStandardTests runs standard conformance tests
-func (a *SpecAdapter) RunStandardTests(ctx context.Context, p *plugin.Plugin) ([]TestResult, error) {
+func (a *SpecAdapter) RunStandardTests(_ context.Context, _ *plugin.Plugin) ([]TestResult, error) {
 	// Standard tests would verify:
 	// - All basic tests pass
 	// - GetProjectedCost returns valid data
@@ -92,7 +92,7 @@ func (a *SpecAdapter) RunStandardTests(ctx context.Context, p *plugin.Plugin) ([
 }
 
 // RunAdvancedTests runs advanced conformance tests
-func (a *SpecAdapter) RunAdvancedTests(ctx context.Context, p *plugin.Plugin) ([]TestResult, error) {
+func (a *SpecAdapter) RunAdvancedTests(_ context.Context, _ *plugin.Plugin) ([]TestResult, error) {
 	// Advanced tests would verify:
 	// - All standard tests pass
 	// - Performance meets requirements

@@ -174,8 +174,8 @@ func Load(path string) (*Config, error) {
 		}
 
 		// Parse YAML and merge with defaults
-		if err := yaml.Unmarshal(data, cfg); err != nil {
-			return nil, fmt.Errorf("parse config file: %w", err)
+		if unmarshalErr := yaml.Unmarshal(data, cfg); unmarshalErr != nil {
+			return nil, fmt.Errorf("parse config file: %w", unmarshalErr)
 		}
 	}
 
@@ -226,6 +226,7 @@ func applyEnvOverrides(cfg *Config) {
 }
 
 // Validate checks that required configuration values are set and valid
+// nolint:gocognit // sequential validation checks - complexity is inherent to comprehensive validation
 func (c *Config) Validate() error {
 	// Validate server config
 	if c.Server.Port < 1 || c.Server.Port > 65535 {

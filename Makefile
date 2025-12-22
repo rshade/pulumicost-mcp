@@ -2,7 +2,7 @@
 
 # Variables
 BINARY_NAME=pulumicost-mcp
-GO_VERSION=1.24
+GO_VERSION=1.25
 BUILD_DIR=bin
 DESIGN_DIR=design
 GEN_DIR=gen
@@ -25,6 +25,18 @@ help: ## Display this help
 generate: ## Generate Goa code from design
 	@echo "$(COLOR_GREEN)Generating Goa code...$(COLOR_RESET)"
 	@goa gen github.com/rshade/pulumicost-mcp/design
+	@# Fix goa-ai bug: optional enum fields with defaults are generated as string but
+	@# validation code treats them as *string. Only fix specific known affected fields.
+	@# See: https://github.com/goadesign/goa-ai/issues/XXX (TODO: file issue)
+	@# Affected fields: Sensitivity (analysis), ConformanceLevel (plugin)
+	@if [ -f gen/mcp_analysis/adapter_server.go ]; then \
+		sed -i 's/if payload\.Sensitivity != nil {/__val = payload.Sensitivity\n\t\t\t\tif false {/' gen/mcp_analysis/adapter_server.go; \
+		sed -i 's/__val = \*payload\.Sensitivity$$/__val = ""/' gen/mcp_analysis/adapter_server.go; \
+	fi
+	@if [ -f gen/mcp_plugin/adapter_server.go ]; then \
+		sed -i 's/if payload\.ConformanceLevel != nil {/__val = payload.ConformanceLevel\n\t\t\t\tif false {/' gen/mcp_plugin/adapter_server.go; \
+		sed -i 's/__val = \*payload\.ConformanceLevel$$/__val = ""/' gen/mcp_plugin/adapter_server.go; \
+	fi
 	@echo "$(COLOR_GREEN)✓ Code generation complete$(COLOR_RESET)"
 
 build: generate ## Build the server binary

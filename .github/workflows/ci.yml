@@ -11,8 +11,8 @@ on:
       - develop
 
 env:
-  GO_VERSION: "1.24"
-  GOLANGCI_LINT_VERSION: "v2.6.0"
+  GO_VERSION: "1.25"
+  GOLANGCI_LINT_VERSION: "v2.6.2"
 
 jobs:
   # Verify that code generation is up to date

@@ -219,6 +219,7 @@ func applyFilters(resources []ResourceCost, filters *ResourceFilters) []Resource
 }
 
 // matchesFilter checks if a resource matches the filter criteria
+// nolint:gocognit // linear filter checks - refactoring would reduce readability
 func matchesFilter(resource ResourceCost, filters *ResourceFilters) bool {
 	// Check provider filter
 	if filters.Provider != nil {

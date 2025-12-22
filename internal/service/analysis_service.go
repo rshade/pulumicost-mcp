@@ -18,7 +18,7 @@ type AnalysisService struct {
 }
 
 // NewAnalysisService creates a new Analysis Service instance
-func NewAnalysisService(dataSource interface{}, logger *logging.Logger) *AnalysisService {
+func NewAnalysisService(_ interface{}, logger *logging.Logger) *AnalysisService {
 	return &AnalysisService{
 		logger: logger,
 	}
@@ -77,7 +77,7 @@ func (s *AnalysisService) GetRecommendations(ctx context.Context, payload *analy
 	}
 
 	// Apply filters
-	if payload.RecommendationTypes != nil && len(payload.RecommendationTypes) > 0 {
+	if len(payload.RecommendationTypes) > 0 {
 		filtered := []*analysis.Recommendation{}
 		typeMap := make(map[string]bool)
 		for _, t := range payload.RecommendationTypes {

@@ -68,13 +68,15 @@ func Init(cfg Config) (func(context.Context) error, error) {
 	return tp.Shutdown, nil
 }
 
-// Start begins a new span
+// Start begins a new span. Caller must defer span.End() to properly close the span.
+// nolint:spancheck // span is returned to caller who is responsible for calling span.End()
 func Start(ctx context.Context, name string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
 	if tracer == nil {
 		// Return no-op span if tracer not initialized
 		return ctx, trace.SpanFromContext(ctx)
 	}
-	return tracer.Start(ctx, name, opts...)
+	ctx, span := tracer.Start(ctx, name, opts...)
+	return ctx, span
 }
 
 // AddEvent adds an event to the current span

@@ -90,21 +90,21 @@ func (a *PluginAdapter) DiscoverPlugins(ctx context.Context) ([]*plugin.Plugin, 
 		metadataPath := filepath.Join(pluginPath, "plugin.json")
 
 		// Check if metadata exists
-		if _, err := os.Stat(metadataPath); os.IsNotExist(err) {
+		if _, statErr := os.Stat(metadataPath); os.IsNotExist(statErr) {
 			a.logger.Debug("skipping directory without metadata", "dir", entry.Name())
 			continue
 		}
 
 		// Load metadata
-		data, err := os.ReadFile(metadataPath)
-		if err != nil {
-			a.logger.Warn("failed to read plugin metadata", "plugin", entry.Name(), "error", err)
+		data, readErr := os.ReadFile(metadataPath)
+		if readErr != nil {
+			a.logger.Warn("failed to read plugin metadata", "plugin", entry.Name(), "error", readErr)
 			continue
 		}
 
 		var meta pluginMetadata
-		if err := json.Unmarshal(data, &meta); err != nil {
-			a.logger.Warn("failed to parse plugin metadata", "plugin", entry.Name(), "error", err)
+		if unmarshalErr := json.Unmarshal(data, &meta); unmarshalErr != nil {
+			a.logger.Warn("failed to parse plugin metadata", "plugin", entry.Name(), "error", unmarshalErr)
 			continue
 		}
 
@@ -151,18 +151,19 @@ func (a *PluginAdapter) EstablishConnection(ctx context.Context, p *plugin.Plugi
 	}
 
 	var meta pluginMetadata
-	if err := json.Unmarshal(data, &meta); err != nil {
+	if unmarshalErr := json.Unmarshal(data, &meta); unmarshalErr != nil {
 		a.recordFailure(p.Name)
-		return fmt.Errorf("parse plugin metadata: %w", err)
+		return fmt.Errorf("parse plugin metadata: %w", unmarshalErr)
 	}
 
 	// Establish gRPC connection
 	dialCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
+	// nolint:staticcheck // SA1019: grpc.DialContext is deprecated but supported throughout 1.x
 	conn, err := grpc.DialContext(dialCtx, meta.GRPCAddress,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
+		grpc.WithBlock(), // nolint:staticcheck // SA1019: grpc.WithBlock deprecated but needed for blocking dial
 	)
 	if err != nil {
 		a.recordFailure(p.Name)
@@ -199,8 +200,8 @@ func (a *PluginAdapter) GetPluginCapabilities(ctx context.Context, p *plugin.Plu
 	}
 
 	var meta pluginMetadata
-	if err := json.Unmarshal(data, &meta); err != nil {
-		return nil, fmt.Errorf("parse plugin metadata: %w", err)
+	if unmarshalErr := json.Unmarshal(data, &meta); unmarshalErr != nil {
+		return nil, fmt.Errorf("parse plugin metadata: %w", unmarshalErr)
 	}
 
 	capabilities := &plugin.PluginCapabilities{
@@ -214,11 +215,17 @@ func (a *PluginAdapter) GetPluginCapabilities(ctx context.Context, p *plugin.Plu
 	return capabilities, nil
 }
 
+// Health status constants
+const (
+	statusHealthy   = "healthy"
+	statusUnhealthy = "unhealthy"
+)
+
 // HealthCheck performs health check on plugin (FR-017)
 func (a *PluginAdapter) HealthCheck(ctx context.Context, p *plugin.Plugin) (status string, latency int64, err error) {
 	// Check circuit breaker first
 	if a.IsCircuitOpen(p.Name) {
-		return "unhealthy", 0, fmt.Errorf("circuit breaker open")
+		return statusUnhealthy, 0, fmt.Errorf("circuit breaker open")
 	}
 
 	a.connMutex.RLock()
@@ -227,8 +234,8 @@ func (a *PluginAdapter) HealthCheck(ctx context.Context, p *plugin.Plugin) (stat
 
 	if !exists {
 		// Try to establish connection first
-		if err := a.EstablishConnection(ctx, p); err != nil {
-			return "unhealthy", 0, err
+		if connErr := a.EstablishConnection(ctx, p); connErr != nil {
+			return statusUnhealthy, 0, connErr
 		}
 
 		a.connMutex.RLock()
@@ -236,7 +243,7 @@ func (a *PluginAdapter) HealthCheck(ctx context.Context, p *plugin.Plugin) (stat
 		a.connMutex.RUnlock()
 
 		if !exists {
-			return "unhealthy", 0, fmt.Errorf("failed to establish connection")
+			return statusUnhealthy, 0, fmt.Errorf("failed to establish connection")
 		}
 	}
 
@@ -255,16 +262,16 @@ func (a *PluginAdapter) HealthCheck(ctx context.Context, p *plugin.Plugin) (stat
 
 	if err != nil {
 		a.recordFailure(p.Name)
-		return "unhealthy", latency, fmt.Errorf("health check failed: %w", err)
+		return statusUnhealthy, latency, fmt.Errorf("health check failed: %w", err)
 	}
 
 	a.resetFailures(p.Name)
 
-	if resp.Status == grpc_health_v1.HealthCheckResponse_SERVING {
-		return "healthy", latency, nil
+	if resp.GetStatus() == grpc_health_v1.HealthCheckResponse_SERVING {
+		return statusHealthy, latency, nil
 	}
 
-	return "unhealthy", latency, fmt.Errorf("plugin not serving")
+	return statusUnhealthy, latency, fmt.Errorf("plugin not serving")
 }
 
 // IsCircuitOpen checks if circuit breaker is open for a plugin (T060)

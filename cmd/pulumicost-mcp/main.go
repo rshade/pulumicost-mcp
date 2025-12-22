@@ -64,10 +64,10 @@ func main() {
 	// Plugin directory - default to ~/.pulumicost/plugins or config value
 	pluginDir := os.Getenv("PLUGIN_DIR")
 	if pluginDir == "" {
-		homeDir, err := os.UserHomeDir()
-		if err != nil {
+		homeDir, homeErr := os.UserHomeDir()
+		if homeErr != nil {
 			// Fall back to /tmp if home dir unavailable
-			logger.Warn("failed to get home directory, using /tmp", "error", err)
+			logger.Warn("failed to get home directory, using /tmp", "error", homeErr)
 			pluginDir = "/tmp/pulumicost/plugins"
 		} else {
 			pluginDir = filepath.Join(homeDir, ".pulumicost", "plugins")
@@ -119,8 +119,8 @@ func main() {
 	// Start server in goroutine
 	go func() {
 		logger.Info("starting server", "addr", httpServer.Addr)
-		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			stdLogger.Fatalf("Server error: %v", err)
+		if listenErr := httpServer.ListenAndServe(); listenErr != nil && listenErr != http.ErrServerClosed {
+			stdLogger.Fatalf("Server error: %v", listenErr)
 		}
 	}()
 
@@ -135,8 +135,8 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	if err := httpServer.Shutdown(ctx); err != nil {
-		logger.Error("server forced to shutdown", "error", err)
+	if shutdownErr := httpServer.Shutdown(ctx); shutdownErr != nil {
+		logger.Error("server forced to shutdown", "error", shutdownErr)
 	}
 
 	logger.Info("server exited")
