@@ -3,29 +3,46 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/rshade/pulumicost-mcp/internal/adapter"
+	"github.com/rshade/pulumicost-mcp/internal/logging"
+	"github.com/rshade/pulumicost-mcp/internal/metrics"
+	"github.com/rshade/pulumicost-mcp/internal/tracing"
 	cost "github.com/rshade/pulumicost-mcp/gen/cost"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // CostService implements the cost.Service interface
 type CostService struct {
 	adapter adapter.PulumiCostAdapter
-	// logger will be injected later
+	logger  *logging.Logger
 }
 
 // NewCostService creates a new Cost Service instance
-func NewCostService(pulumiAdapter adapter.PulumiCostAdapter, logger interface{}) *CostService {
+func NewCostService(pulumiAdapter adapter.PulumiCostAdapter, logger *logging.Logger) *CostService {
 	return &CostService{
 		adapter: pulumiAdapter,
+		logger:  logger,
 	}
 }
 
 // AnalyzeProjected calculates projected costs from Pulumi preview JSON
 func (s *CostService) AnalyzeProjected(ctx context.Context, payload *cost.AnalyzeProjectedPayload) (*cost.CostResult, error) {
+	start := time.Now()
+	ctx, span := tracing.Start(ctx, "CostService.AnalyzeProjected")
+	defer span.End()
+
+	s.logger.WithService("cost").Info("analyzing projected costs")
+	metrics.RecordCostQuery("projected")
+
 	// Validate payload
 	if payload == nil || payload.PulumiJSON == "" {
-		return nil, fmt.Errorf("missing Pulumi JSON")
+		err := fmt.Errorf("missing Pulumi JSON")
+		s.logger.WithService("cost").ErrorJSON("validation failed", err, nil)
+		metrics.RecordError("cost", "analyze_projected", "validation")
+		tracing.RecordError(ctx, err)
+		return nil, err
 	}
 
 	// Build filters from payload
@@ -38,6 +55,10 @@ func (s *CostService) AnalyzeProjected(ctx context.Context, payload *cost.Analyz
 			Tags:         payload.Filters.Tags,
 			NamePattern:  payload.Filters.NamePattern,
 		}
+		tracing.SetAttributes(ctx,
+			attribute.Bool("filtered", true),
+			attribute.String("provider", stringValue(payload.Filters.Provider)),
+		)
 	}
 
 	// Call adapter
@@ -51,24 +72,63 @@ func (s *CostService) AnalyzeProjected(ctx context.Context, payload *cost.Analyz
 	}
 
 	if err != nil {
+		s.logger.WithService("cost").ErrorJSON("adapter call failed", err, nil)
+		metrics.RecordError("cost", "analyze_projected", "adapter")
+		tracing.RecordError(ctx, err)
 		return nil, fmt.Errorf("failed to analyze projected costs: %w", err)
 	}
 
 	// Convert adapter result to Goa result type
 	result := convertToCostResult(adapterResult)
 
+	// Record metrics
+	metrics.RecordRequest("cost", "analyze_projected", time.Since(start))
+	metrics.RecordResourceCount(len(result.Resources))
+
+	tracing.SetAttributes(ctx,
+		attribute.Int("resource_count", len(result.Resources)),
+		attribute.Float64("total_monthly", result.TotalMonthly),
+	)
+
+	s.logger.WithService("cost").InfoJSON("projected costs analyzed", map[string]interface{}{
+		"resource_count": len(result.Resources),
+		"total_monthly":  result.TotalMonthly,
+		"duration_ms":    time.Since(start).Milliseconds(),
+	})
+
 	return result, nil
 }
 
 // GetActual retrieves actual historical costs from cloud providers
 func (s *CostService) GetActual(ctx context.Context, payload *cost.GetActualPayload) (*cost.CostResult, error) {
+	start := time.Now()
+	ctx, span := tracing.Start(ctx, "CostService.GetActual")
+	defer span.End()
+
+	s.logger.WithService("cost").Info("getting actual costs")
+	metrics.RecordCostQuery("actual")
+
 	// Validate payload
 	if payload == nil || payload.StackName == "" {
-		return nil, fmt.Errorf("missing stack name")
+		err := fmt.Errorf("missing stack name")
+		s.logger.WithService("cost").ErrorJSON("validation failed", err, nil)
+		metrics.RecordError("cost", "get_actual", "validation")
+		tracing.RecordError(ctx, err)
+		return nil, err
 	}
 	if payload.TimeRange == nil {
-		return nil, fmt.Errorf("missing time range")
+		err := fmt.Errorf("missing time range")
+		s.logger.WithService("cost").ErrorJSON("validation failed", err, nil)
+		metrics.RecordError("cost", "get_actual", "validation")
+		tracing.RecordError(ctx, err)
+		return nil, err
 	}
+
+	tracing.SetAttributes(ctx,
+		attribute.String("stack_name", payload.StackName),
+		attribute.String("time_range_start", payload.TimeRange.Start),
+		attribute.String("time_range_end", payload.TimeRange.End),
+	)
 
 	// Convert to adapter TimeRange
 	timeRange := adapter.TimeRange{
@@ -87,11 +147,30 @@ func (s *CostService) GetActual(ctx context.Context, payload *cost.GetActualPayl
 	}
 
 	if err != nil {
+		s.logger.WithService("cost").ErrorJSON("adapter call failed", err, nil)
+		metrics.RecordError("cost", "get_actual", "adapter")
+		tracing.RecordError(ctx, err)
 		return nil, fmt.Errorf("failed to get actual costs: %w", err)
 	}
 
 	// Convert adapter result to Goa result type
 	result := convertToCostResult(adapterResult)
+
+	// Record metrics
+	metrics.RecordRequest("cost", "get_actual", time.Since(start))
+	metrics.RecordResourceCount(len(result.Resources))
+
+	tracing.SetAttributes(ctx,
+		attribute.Int("resource_count", len(result.Resources)),
+		attribute.Float64("total_monthly", result.TotalMonthly),
+	)
+
+	s.logger.WithService("cost").InfoJSON("actual costs retrieved", map[string]interface{}{
+		"stack_name":     payload.StackName,
+		"resource_count": len(result.Resources),
+		"total_monthly":  result.TotalMonthly,
+		"duration_ms":    time.Since(start).Milliseconds(),
+	})
 
 	return result, nil
 }
@@ -286,4 +365,12 @@ func convertToCostResult(adapterResult *adapter.CostResult) *cost.CostResult {
 		ByProvider:   byProvider,
 		ByRegion:     byRegion,
 	}
+}
+
+// stringValue returns the string value or empty string if nil
+func stringValue(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }

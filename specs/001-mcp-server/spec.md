@@ -207,17 +207,18 @@ requiring plugin management features.
 
 ### Measurable Outcomes
 
-- **SC-001**: Users can obtain projected costs for infrastructure changes in
-  under 3 seconds for stacks with up to 100 resources
+- **SC-001**: Users can obtain projected costs for infrastructure changes with
+  P95 latency ≤2.9 seconds for stacks with up to 100 resources
 - **SC-002**: System successfully handles 50 concurrent cost analysis requests
   without degradation
-- **SC-003**: 95% of cost queries return results within the 3-second performance
-  target
+- **SC-003**: 95% of cost queries (P95) return results within 3.0 seconds or
+  less
 - **SC-004**: Plugin validation completes within 30 seconds for standard
   conformance tests
 - **SC-005**: System achieves 99% uptime over a 30-day period
-- **SC-006**: Cost analysis accuracy matches within 5% of actual cloud provider
-  billing
+- **SC-006**: Cost estimates are within ±5% of actual cloud provider billing
+  statements for the same resources over the same time period (validated by
+  comparing projected costs against actual invoice amounts)
 - **SC-007**: Users successfully complete cost analysis tasks on first attempt
   90% of the time
 - **SC-008**: System detects cost anomalies within 24 hours of occurrence

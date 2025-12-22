@@ -6,21 +6,42 @@ import (
 	"time"
 
 	"github.com/rshade/pulumicost-mcp/gen/analysis"
+	"github.com/rshade/pulumicost-mcp/internal/logging"
+	"github.com/rshade/pulumicost-mcp/internal/metrics"
+	"github.com/rshade/pulumicost-mcp/internal/tracing"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // AnalysisService implements the analysis.Service interface
-type AnalysisService struct{}
+type AnalysisService struct {
+	logger *logging.Logger
+}
 
 // NewAnalysisService creates a new Analysis Service instance
-func NewAnalysisService(dataSource interface{}, logger interface{}) *AnalysisService {
-	return &AnalysisService{}
+func NewAnalysisService(dataSource interface{}, logger *logging.Logger) *AnalysisService {
+	return &AnalysisService{
+		logger: logger,
+	}
 }
 
 // GetRecommendations returns cost optimization recommendations
 func (s *AnalysisService) GetRecommendations(ctx context.Context, payload *analysis.GetRecommendationsPayload) (*analysis.GetRecommendationsResult, error) {
+	start := time.Now()
+	ctx, span := tracing.Start(ctx, "AnalysisService.GetRecommendations")
+	defer span.End()
+
+	s.logger.WithService("analysis").Info("getting cost recommendations")
+	metrics.RecordCostQuery("recommendations")
+
 	if payload.StackName == "" {
-		return nil, fmt.Errorf("stack name cannot be empty")
+		err := fmt.Errorf("stack name cannot be empty")
+		s.logger.WithService("analysis").ErrorJSON("validation failed", err, nil)
+		metrics.RecordError("analysis", "get_recommendations", "validation")
+		tracing.RecordError(ctx, err)
+		return nil, err
 	}
+
+	tracing.SetAttributes(ctx, attribute.String("stack_name", payload.StackName))
 
 	recommendations := []*analysis.Recommendation{
 		{
@@ -80,6 +101,26 @@ func (s *AnalysisService) GetRecommendations(ctx context.Context, payload *analy
 		recommendations = filtered
 	}
 
+	// Calculate total savings
+	totalSavings := 0.0
+	for _, rec := range recommendations {
+		totalSavings += rec.ProjectedSavings
+	}
+
+	// Record metrics
+	metrics.RecordRequest("analysis", "get_recommendations", time.Since(start))
+	tracing.SetAttributes(ctx,
+		attribute.Int("recommendation_count", len(recommendations)),
+		attribute.Float64("total_savings", totalSavings),
+	)
+
+	s.logger.WithService("analysis").InfoJSON("recommendations generated", map[string]interface{}{
+		"stack_name":           payload.StackName,
+		"recommendation_count": len(recommendations),
+		"total_savings":        totalSavings,
+		"duration_ms":          time.Since(start).Milliseconds(),
+	})
+
 	return &analysis.GetRecommendationsResult{
 		Recommendations: recommendations,
 	}, nil
@@ -87,12 +128,32 @@ func (s *AnalysisService) GetRecommendations(ctx context.Context, payload *analy
 
 // DetectAnomalies detects unusual spending patterns
 func (s *AnalysisService) DetectAnomalies(ctx context.Context, payload *analysis.DetectAnomaliesPayload) (*analysis.DetectAnomaliesResult, error) {
+	start := time.Now()
+	ctx, span := tracing.Start(ctx, "AnalysisService.DetectAnomalies")
+	defer span.End()
+
+	s.logger.WithService("analysis").Info("detecting cost anomalies")
+	metrics.RecordCostQuery("anomalies")
+
 	if payload.StackName == "" {
-		return nil, fmt.Errorf("stack name cannot be empty")
+		err := fmt.Errorf("stack name cannot be empty")
+		s.logger.WithService("analysis").ErrorJSON("validation failed", err, nil)
+		metrics.RecordError("analysis", "detect_anomalies", "validation")
+		tracing.RecordError(ctx, err)
+		return nil, err
 	}
 	if payload.TimeRange == nil {
-		return nil, fmt.Errorf("time range is required")
+		err := fmt.Errorf("time range is required")
+		s.logger.WithService("analysis").ErrorJSON("validation failed", err, nil)
+		metrics.RecordError("analysis", "detect_anomalies", "validation")
+		tracing.RecordError(ctx, err)
+		return nil, err
 	}
+
+	tracing.SetAttributes(ctx,
+		attribute.String("stack_name", payload.StackName),
+		attribute.String("sensitivity", payload.Sensitivity),
+	)
 
 	anomalies := []*analysis.Anomaly{
 		{
@@ -120,6 +181,17 @@ func (s *AnalysisService) DetectAnomalies(ctx context.Context, payload *analysis
 			PotentialCauses:  []string{"Increased S3 storage usage", "Large file uploads", "Lifecycle policy not applied"},
 		})
 	}
+
+	// Record metrics
+	metrics.RecordRequest("analysis", "detect_anomalies", time.Since(start))
+	tracing.SetAttributes(ctx, attribute.Int("anomaly_count", len(anomalies)))
+
+	s.logger.WithService("analysis").InfoJSON("anomalies detected", map[string]interface{}{
+		"stack_name":    payload.StackName,
+		"anomaly_count": len(anomalies),
+		"sensitivity":   payload.Sensitivity,
+		"duration_ms":   time.Since(start).Milliseconds(),
+	})
 
 	return &analysis.DetectAnomaliesResult{
 		Anomalies: anomalies,

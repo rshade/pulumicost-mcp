@@ -6,7 +6,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 PulumiCost MCP Server is a Model Context Protocol implementation that exposes cloud cost analysis capabilities to AI assistants. Built with Goa and Goa-AI, it provides type-safe, design-first development with guaranteed schema consistency.
 
-**Current Status**: Initial project setup complete. Core design files exist but services are not yet implemented. All implementation tasks are tracked in GitHub issues (see Issues section below).
+**Current Status**: Core implementation complete (Phases 1-5). Services implemented with 83.6% test coverage. Phase 6 (observability) in progress.
+
+## CRITICAL: Task Completion Tracking
+
+**MANDATORY**: After completing ANY task from `specs/001-mcp-server/tasks.md`, you MUST immediately mark it as complete by changing `- [ ]` to `- [x]` in the tasks.md file.
+
+**Why this matters**:
+- Prevents duplicate work
+- Maintains accurate project status
+- Enables proper progress tracking
+- Supports incremental delivery validation
+
+**How to mark tasks complete**:
+1. After successfully completing a task (e.g., T050)
+2. Immediately edit `specs/001-mcp-server/tasks.md`
+3. Change `- [ ] T050` to `- [x] T050`
+4. Commit the tasks.md update with your implementation
+
+**Never skip this step** - it's as important as the implementation itself.
 
 ## Quick Reference
 

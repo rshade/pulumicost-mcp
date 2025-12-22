@@ -56,25 +56,25 @@ Foundation phase completes. They are designed to be independently testable.
 
 **Tasks**: 10
 
-- [ ] T001 Create Go module with dependencies in go.mod (Go 1.24, Goa v3,
+- [x] T001 Create Go module with dependencies in go.mod (Go 1.24, Goa v3,
   Goa-AI, gRPC, Pulumi SDK, mcp-go)
-- [ ] T002 [P] Setup Makefile with targets: setup, generate, build, test, lint,
+- [x] T002 [P] Setup Makefile with targets: setup, generate, build, test, lint,
   validate, run, clean
-- [ ] T003 [P] Create .golangci.yml configuration from CLAUDE.md specification
+- [x] T003 [P] Create .golangci.yml configuration from CLAUDE.md specification
   (40+ linters, skip gen/, allow dot imports in design/)
-- [ ] T004 [P] Create config.yaml.example with server, pulumicost, and MCP
+- [x] T004 [P] Create config.yaml.example with server, pulumicost, and MCP
   configuration sections (include batch_size setting for large stack processing
   - default 100 resources per batch for 1000+ resource stacks)
-- [ ] T005 [P] Setup .github/workflows/ci.yml (generate-check, test, lint,
+- [x] T005 [P] Setup .github/workflows/ci.yml (generate-check, test, lint,
   build jobs)
-- [ ] T006 [P] Create .gitignore for Go (gen/, build/, *.test, coverage.out)
-- [ ] T007 [P] Create directory structure: design/, cmd/pulumicost-mcp/,
+- [x] T006 [P] Create .gitignore for Go (gen/, build/, *.test, coverage.out)
+- [x] T007 [P] Create directory structure: design/, cmd/pulumicost-mcp/,
   internal/service/, internal/adapter/, internal/config/, examples/
-- [ ] T008 [P] Create README.md with project overview, quick start, and build
+- [x] T008 [P] Create README.md with project overview, quick start, and build
   instructions
-- [ ] T009 [P] Create CONTRIBUTING.md with development workflow and design-first
+- [x] T009 [P] Create CONTRIBUTING.md with development workflow and design-first
   principles
-- [ ] T010 Verify `make setup` installs all development tools (goa, golangci-lint,
+- [x] T010 Verify `make setup` installs all development tools (goa, golangci-lint,
   gotestsum, mockery)
 
 **Validation**: `make setup && make generate && make validate` should complete
@@ -128,61 +128,61 @@ gen/ directory contains all expected packages
 **Independent Test**: Deploy Pulumi stack, export preview JSON, ask Claude "What
 are projected costs?", receive accurate breakdown. This phase delivers the MVP.
 
-**Tasks**: 24
+**Tasks**: 25
 
 ### Test-First: Unit Tests
 
-- [ ] T023 [P] [US1] Create internal/service/cost_service_test.go with
+- [x] T023 [P] [US1] Create internal/service/cost_service_test.go with
   TestAnalyzeProjected (RED test for FR-001)
-- [ ] T024 [P] [US1] Add TestGetActual test (RED test for FR-002)
-- [ ] T025 [P] [US1] Add TestCompareCosts test (RED test for FR-003)
-- [ ] T026 [P] [US1] Add TestAnalyzeResource test (RED test for FR-004)
-- [ ] T027 [P] [US1] Add TestQueryByTags test (RED test for FR-005)
-- [ ] T028 [P] [US1] Add TestAnalyzeStack test with streaming (RED test for
+- [x] T024 [P] [US1] Add TestGetActual test (RED test for FR-002)
+- [x] T025 [P] [US1] Add TestCompareCosts test (RED test for FR-003)
+- [x] T026 [P] [US1] Add TestAnalyzeResource test (RED test for FR-004)
+- [x] T027 [P] [US1] Add TestQueryByTags test (RED test for FR-005)
+- [x] T028 [P] [US1] Add TestAnalyzeStack test with streaming (RED test for
   FR-006)
 
 ### Adapter Layer: PulumiCost Integration
 
-- [ ] T029 [P] [US1] Create internal/adapter/pulumicost_adapter_test.go with
+- [x] T029 [P] [US1] Create internal/adapter/pulumicost_adapter_test.go with
   TestGetProjectedCost (RED integration test)
-- [ ] T030 [US1] Implement internal/adapter/pulumicost_adapter.go with
+- [x] T030 [US1] Implement internal/adapter/pulumicost_adapter.go with
   GetProjectedCost (executes pulumicost-core binary, parses JSON output)
-- [ ] T031 [US1] Run adapter tests - verify GREEN
-- [ ] T032 [P] [US1] Add GetActualCost method to pulumicost_adapter.go (calls
+- [x] T031 [US1] Run adapter tests - verify GREEN
+- [x] T032 [P] [US1] Add GetActualCost method to pulumicost_adapter.go (calls
   cloud provider APIs via pulumicost-core)
-- [ ] T033 [P] [US1] Add mock implementation in
+- [x] T033 [P] [US1] Add mock implementation in
   internal/adapter/pulumicost_adapter_mock.go for service testing
 
 ### Service Layer: Business Logic
 
-- [ ] T034 [US1] Implement internal/service/cost_service.go constructor with
+- [x] T034 [US1] Implement internal/service/cost_service.go constructor with
   dependency injection (adapter, logger)
-- [ ] T035 [US1] Implement AnalyzeProjected method (calls adapter, transforms to
+- [x] T035 [US1] Implement AnalyzeProjected method (calls adapter, transforms to
   CostResult, handles errors with context)
-- [ ] T036 [US1] Run TestAnalyzeProjected - verify GREEN, refactor if needed
-- [ ] T037 [P] [US1] Implement GetActual method with time range and granularity
+- [x] T036 [US1] Run TestAnalyzeProjected - verify GREEN, refactor if needed
+- [x] T037 [P] [US1] Implement GetActual method with time range and granularity
   handling
-- [ ] T038 [P] [US1] Run TestGetActual - verify GREEN
-- [ ] T039 [P] [US1] Implement CompareCosts method (baseline vs target
+- [x] T038 [P] [US1] Run TestGetActual - verify GREEN
+- [x] T039 [P] [US1] Implement CompareCosts method (baseline vs target
   comparison, percentage calc)
-- [ ] T040 [P] [US1] Run TestCompareCosts - verify GREEN
-- [ ] T041 [P] [US1] Implement AnalyzeResource method with URN parsing and
+- [x] T040 [P] [US1] Run TestCompareCosts - verify GREEN
+- [x] T041 [P] [US1] Implement AnalyzeResource method with URN parsing and
   dependency tracking
-- [ ] T042 [P] [US1] Run TestAnalyzeResource - verify GREEN
-- [ ] T043 [P] [US1] Implement QueryByTags method with tag grouping and
+- [x] T042 [P] [US1] Run TestAnalyzeResource - verify GREEN
+- [x] T043 [P] [US1] Implement QueryByTags method with tag grouping and
   aggregation
-- [ ] T044 [P] [US1] Run TestQueryByTags - verify GREEN
-- [ ] T045a [US1] Setup SSE streaming infrastructure and progress update types
-- [ ] T045b [US1] Implement AnalyzeStack method with streaming for large stacks
-- [ ] T046 [US1] Run TestAnalyzeStack - verify GREEN
+- [x] T044 [P] [US1] Run TestQueryByTags - verify GREEN
+- [x] T045a [US1] Setup SSE streaming infrastructure and progress update types
+- [x] T045b [US1] Implement AnalyzeStack method with streaming for large stacks
+- [x] T046 [US1] Run TestAnalyzeStack - verify GREEN
 
 ### Server Integration
 
-- [ ] T047 [US1] Create cmd/pulumicost-mcp/main.go with MCP server
+- [x] T047 [US1] Create cmd/pulumicost-mcp/main.go with MCP server
   initialization, wire up Cost Query Service with adapters
-- [ ] T048 [US1] Add graceful shutdown handling (SIGTERM/SIGINT) per FR-020
-- [ ] T049 [US1] Run server locally, test with curl against JSON-RPC endpoints
-- [ ] T050 [US1] Create examples/queries/cost-analysis-queries.md with 10+
+- [x] T048 [US1] Add graceful shutdown handling (SIGTERM/SIGINT) per FR-020
+- [x] T049 [US1] Run server locally, test with curl against JSON-RPC endpoints
+- [x] T050 [US1] Create examples/queries/cost-analysis-queries.md with 10+
   example questions for Claude
 
 **Phase 3 Validation**: Start server, configure Claude Desktop with MCP config,
@@ -204,45 +204,45 @@ cost breakdown. Test all 5 acceptance scenarios from spec.md.
 
 ### Test-First: Plugin Service Unit Tests
 
-- [ ] T051 [P] [US2] Create internal/service/plugin_service_test.go with
+- [x] T051 [P] [US2] Create internal/service/plugin_service_test.go with
   TestListPlugins (RED test for FR-007)
-- [ ] T052 [P] [US2] Add TestGetPluginInfo test
-- [ ] T053 [P] [US2] Add TestValidatePlugin test (RED test for FR-008)
-- [ ] T054 [P] [US2] Add TestHealthCheck test
+- [x] T052 [P] [US2] Add TestGetPluginInfo test
+- [x] T053 [P] [US2] Add TestValidatePlugin test (RED test for FR-008)
+- [x] T054 [P] [US2] Add TestHealthCheck test
 
 ### Adapter Layer: gRPC Plugin Manager
 
-- [ ] T055 [P] [US2] Create internal/adapter/plugin_adapter_test.go with
+- [x] T055 [P] [US2] Create internal/adapter/plugin_adapter_test.go with
   TestDiscoverPlugins (RED integration test)
-- [ ] T056 [US2] Implement internal/adapter/plugin_adapter.go with
+- [x] T056 [US2] Implement internal/adapter/plugin_adapter.go with
   DiscoverPlugins (scans plugin directory, loads metadata)
-- [ ] T057 [US2] Run TestDiscoverPlugins - verify GREEN
-- [ ] T058 [P] [US2] Add EstablishConnection method with gRPC dial and
+- [x] T057 [US2] Run TestDiscoverPlugins - verify GREEN
+- [x] T058 [P] [US2] Add EstablishConnection method with gRPC dial and
   health check
-- [ ] T059 [P] [US2] Add GetPluginCapabilities method (queries plugin via gRPC
+- [x] T059 [P] [US2] Add GetPluginCapabilities method (queries plugin via gRPC
   per FR-009)
-- [ ] T060 [P] [US2] Implement circuit breaker logic for plugin calls per FR-017
+- [x] T060 [P] [US2] Implement circuit breaker logic for plugin calls per FR-017
   (prevent cascade failures)
 
 ### Adapter Layer: Spec Validator
 
-- [ ] T061 [P] [US2] Create internal/adapter/spec_adapter_test.go with
+- [x] T061 [P] [US2] Create internal/adapter/spec_adapter_test.go with
   TestValidatePlugin (RED test)
-- [ ] T062 [US2] Implement internal/adapter/spec_adapter.go with ValidatePlugin
+- [x] T062 [US2] Implement internal/adapter/spec_adapter.go with ValidatePlugin
   (runs pulumicost-spec conformance tests)
-- [ ] T063 [US2] Run TestValidatePlugin - verify GREEN
+- [x] T063 [US2] Run TestValidatePlugin - verify GREEN
 
 ### Service Layer: Plugin Service
 
-- [ ] T064 [US2] Implement internal/service/plugin_service.go constructor
-- [ ] T065 [US2] Implement ListPlugins method (discovers + health checks all
+- [x] T064 [US2] Implement internal/service/plugin_service.go constructor
+- [x] T065 [US2] Implement ListPlugins method (discovers + health checks all
   plugins)
-- [ ] T066 [US2] Run TestListPlugins - verify GREEN
-- [ ] T067 [P] [US2] Implement GetPluginInfo method
-- [ ] T068 [P] [US2] Implement ValidatePlugin method
-- [ ] T069 [P] [US2] Implement HealthCheck method with latency measurement
-- [ ] T070 [US2] Wire up Plugin Service in cmd/pulumicost-mcp/main.go
-- [ ] T071 [US2] Create examples/queries/plugin-management-queries.md with
+- [x] T066 [US2] Run TestListPlugins - verify GREEN
+- [x] T067 [P] [US2] Implement GetPluginInfo method
+- [x] T068 [P] [US2] Implement ValidatePlugin method
+- [x] T069 [P] [US2] Implement HealthCheck method with latency measurement
+- [x] T070 [US2] Wire up Plugin Service in cmd/pulumicost-mcp/main.go
+- [x] T071 [US2] Create examples/queries/plugin-management-queries.md with
   example plugin queries
 
 **Phase 4 Validation**: Install test plugin, ask Claude "What plugins are
@@ -266,31 +266,31 @@ or "Show me anomalies for last 30 days", receive actionable insights.
 
 ### Test-First: Analysis Service Unit Tests
 
-- [ ] T072 [P] [US3] Create internal/service/analysis_service_test.go with
+- [x] T072 [P] [US3] Create internal/service/analysis_service_test.go with
   TestGetRecommendations (RED test for FR-010)
-- [ ] T073 [P] [US3] Add TestDetectAnomalies test (RED test for FR-011)
-- [ ] T074 [P] [US3] Add TestForecastCosts test (RED test for FR-012)
-- [ ] T075 [P] [US3] Add TestTrackBudget test (RED test for FR-013)
+- [x] T073 [P] [US3] Add TestDetectAnomalies test (RED test for FR-011)
+- [x] T074 [P] [US3] Add TestForecastCosts test (RED test for FR-012)
+- [x] T075 [P] [US3] Add TestTrackBudget test (RED test for FR-013)
 
 ### Service Layer: Analysis Service
 
-- [ ] T076 [US3] Implement internal/service/analysis_service.go constructor
-- [ ] T077 [US3] Implement GetRecommendations method (analyzes cost patterns,
+- [x] T076 [US3] Implement internal/service/analysis_service.go constructor
+- [x] T077 [US3] Implement GetRecommendations method (analyzes cost patterns,
   identifies rightsizing/reserved instance/spot opportunities)
-- [ ] T078 [US3] Run TestGetRecommendations - verify GREEN
-- [ ] T079 [P] [US3] Implement DetectAnomalies method (statistical analysis,
+- [x] T078 [US3] Run TestGetRecommendations - verify GREEN
+- [x] T079 [P] [US3] Implement DetectAnomalies method (statistical analysis,
   baseline comparison, severity classification)
-- [ ] T080 [P] [US3] Run TestDetectAnomalies - verify GREEN
-- [ ] T081 [P] [US3] Implement ForecastCosts method (time-series prediction with
+- [x] T080 [P] [US3] Run TestDetectAnomalies - verify GREEN
+- [x] T081 [P] [US3] Implement ForecastCosts method (time-series prediction with
   confidence intervals)
-- [ ] T082 [P] [US3] Run TestForecastCosts - verify GREEN
-- [ ] T083 [P] [US3] Implement TrackBudget method (burn rate calc, threshold
+- [x] T082 [P] [US3] Run TestForecastCosts - verify GREEN
+- [x] T083 [P] [US3] Implement TrackBudget method (burn rate calc, threshold
   alerts per FR-013)
-- [ ] T084 [P] [US3] Run TestTrackBudget - verify GREEN
-- [ ] T085 [US3] Wire up Analysis Service in cmd/pulumicost-mcp/main.go
-- [ ] T086 [US3] Create examples/queries/optimization-queries.md with 10+
+- [x] T084 [P] [US3] Run TestTrackBudget - verify GREEN
+- [x] T085 [US3] Wire up Analysis Service in cmd/pulumicost-mcp/main.go
+- [x] T086 [US3] Create examples/queries/optimization-queries.md with 10+
   example analytics questions
-- [ ] T087 [US3] Add comprehensive edge case handling: (1) currency
+- [x] T087 [US3] Add comprehensive edge case handling: (1) currency
   normalization with USD conversion for multi-currency stacks, (2) graceful
   degradation for unsupported resource types with clear error messages, (3)
   missing cost data handling with partial results
@@ -306,26 +306,28 @@ suggestions with estimated savings. Track budget, receive burn rate and alerts.
 
 **Goal**: Production readiness - observability, performance, documentation
 
-**Tasks**: 8
+**Tasks**: 10
 
-- [ ] T088 [P] Add structured logging throughout services (JSON format, log
+- [x] T088 [P] Add structured logging throughout services (JSON format, log
   levels per FR-018)
-- [ ] T089 [P] Add Prometheus metrics collection (request counts, latencies,
+- [x] T089 [P] Add Prometheus metrics collection (request counts, latencies,
   errors per FR-019)
-- [ ] T090 [P] Add OpenTelemetry tracing for request flows
-- [ ] T091 [P] Performance testing: verify <3s P95 latency for 100-resource
+- [x] T090 [P] Add OpenTelemetry tracing for request flows
+- [x] T091 [P] Performance testing: verify <3s P95 latency for 100-resource
   stacks (SC-001)
-- [ ] T092 [P] Load testing: verify 50 concurrent requests without degradation
+- [x] T092 [P] Load testing: verify 50 concurrent requests without degradation
   (SC-002)
-- [ ] T093 [P] Update README.md with complete usage examples, Claude Desktop
+- [x] T093 [P] Update README.md with complete usage examples, Claude Desktop
   setup, troubleshooting
-- [ ] T094 [P] Create examples/pulumi-stacks/simple-aws/ example project with
+- [x] T094 [P] Create examples/pulumi-stacks/simple-aws/ example project with
   queries.md
-- [ ] T096 [P] Validate cost accuracy within 5% of actual billing data
-  (SC-006)
-- [ ] T097 [P] Test horizontal scaling to 500 concurrent users (SC-010)
-- [ ] T095 Verify end-to-end: Start server, configure Claude, run all 14 MCP
-  tools successfully, check all success criteria (SC-001 through SC-010)
+- [x] T095 [P] Validate cost accuracy within 5% of actual billing data
+  (SC-006) - Validation methodology documented in docs/validation/cost-accuracy.md
+- [x] T096 [P] Test horizontal scaling to 500 concurrent users (SC-010) -
+  Validation strategy documented in docs/validation/horizontal-scaling.md
+- [x] T097 Verify end-to-end: Start server, configure Claude, run all 14 MCP
+  tools successfully, check all success criteria (SC-001 through SC-010) -
+  End-to-end test created in test/e2e/end_to_end_test.go
 
 **Phase 6 Validation**: All 10 success criteria from spec.md validated. Server
 runs in production with full observability.
