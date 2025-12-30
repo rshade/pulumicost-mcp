@@ -2,7 +2,7 @@
 
 # Variables
 BINARY_NAME=pulumicost-mcp
-GO_VERSION=1.24
+GO_VERSION=1.25
 BUILD_DIR=bin
 DESIGN_DIR=design
 GEN_DIR=gen
