@@ -9,7 +9,7 @@ require (
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.39.0
 	go.opentelemetry.io/otel/sdk v1.39.0
 	go.opentelemetry.io/otel/trace v1.39.0
-	goa.design/goa-ai v0.37.0
+	goa.design/goa-ai v0.39.0
 	goa.design/goa/v3 v3.23.5-0.20251216171136-b96be649577b
 	google.golang.org/grpc v1.78.0
 	gopkg.in/yaml.v3 v3.0.1
